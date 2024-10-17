@@ -13,7 +13,7 @@ class InputCameraScreenModel(
        screenModelScope.launch {
            billRepository.saveDraftBill(BillModel(
                items = emptyList(),
-               members = emptySet()
+               members = emptyList()
            ))
        }
     }

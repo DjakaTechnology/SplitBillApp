@@ -1,7 +1,6 @@
 package id.djaka.splitbillapp.input.assign
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DoubleArrow
 import androidx.compose.material.icons.filled.RadioButtonChecked
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
@@ -30,11 +30,18 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,12 +49,16 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
 import cafe.adriel.voyager.core.annotation.ExperimentalVoyagerApi
 import cafe.adriel.voyager.core.lifecycle.LifecycleEffectOnce
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.getScreenModel
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
+import id.djaka.splitbillapp.input.result.InputResultScreen
 import id.djaka.splitbillapp.platform.CoreTheme
 import id.djaka.splitbillapp.platform.Spacing
 import id.djaka.splitbillapp.util.toReadableCurrency
@@ -57,6 +68,7 @@ class InputAssignItemScreen : Screen {
     @Composable
     override fun Content() {
         CoreTheme {
+            val navigator = LocalNavigator.currentOrThrow
             val screenModel = getScreenModel<InputAssignItemScreenModel>()
             LifecycleEffectOnce {
                 screenModel.onCreate()
@@ -69,8 +81,21 @@ class InputAssignItemScreen : Screen {
                 screenModel.memberItem,
                 onClickMenuItem = {
                     if (currentMember == null) return@InputAssignItemWidget
-                    screenModel.assignMember(it, currentMember)
+                    screenModel.toggleAssignMember(it, currentMember)
                 },
+                total = screenModel.total.collectAsState(0.0).value,
+                onClickMemberItem = {
+                    screenModel.selectMember(it)
+                },
+                onClickCloseMemberItem = {
+                    screenModel.removeMember(it)
+                },
+                onAddMember = {
+                    screenModel.addNewMember(it)
+                },
+                onClickNext = {
+                    navigator.push(InputResultScreen())
+                }
             )
         }
     }
@@ -82,7 +107,13 @@ fun InputAssignItemWidget(
     menuItems: List<InputAssignItemScreenModel.MenuItem>,
     selectedMember: String?,
     memberList: List<InputAssignItemScreenModel.MemberItem>,
-    onClickMenuItem: (index: Int) -> Unit
+    onClickMenuItem: (index: Int) -> Unit,
+    feeList: List<InputAssignItemScreenModel.FeeItem> = listOf(),
+    total: Double = 0.0,
+    onClickMemberItem: (index: Int) -> Unit = {},
+    onClickCloseMemberItem: (index: Int) -> Unit = {},
+    onAddMember: (name: String) -> Unit = {},
+    onClickNext: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -96,11 +127,36 @@ fun InputAssignItemWidget(
         }
     ) {
         Box(Modifier.fillMaxSize()) {
+            if (false) {
+                ModalBottomSheet(onDismissRequest = {}) {
+                    var member by remember { mutableStateOf("") }
+                    AddMemberSheet(
+                        member = member,
+                        onMemberChange = {
+                            member = it
+                        },
+                        onClickSave = {
+                            onAddMember(member)
+                            member = ""
+                        }
+                    )
+                }
+            }
+
             Column(
                 Modifier.padding(it).padding(horizontal = Spacing.m),
                 verticalArrangement = Arrangement.spacedBy(Spacing.m)
             ) {
-                MemberSection(selectedMember, memberList)
+                MemberSection(
+                    selectedMember,
+                    memberList,
+                    onClickItem = {
+                        onClickMemberItem(it)
+                    },
+                    onClickClose = {
+                        onClickCloseMemberItem(it)
+                    }
+                )
 
                 SplitSection(menuItems, onClickMenuItem, selectedMember)
 
@@ -109,32 +165,44 @@ fun InputAssignItemWidget(
                     verticalArrangement = Arrangement.spacedBy(Spacing.s),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    FeeItem()
+                    feeList.fastForEachIndexed { index, it ->
+                        FeeItem(
+                            it.name,
+                            it.price
+                        )
+                    }
                 }
             }
 
             AssignItemBottomBar(
-                Modifier.fillMaxWidth().align(Alignment.BottomCenter)
+                Modifier.fillMaxWidth().align(Alignment.BottomCenter),
+                total,
+                onClickNext
             )
         }
     }
 }
 
 @Composable
-private fun FeeItem() {
+private fun FeeItem(
+    label: String,
+    price: Double
+) {
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text("Discount")
-        Text("-20000")
+        Text(label)
+        Text(price.toReadableCurrency())
     }
 }
 
 @Composable
 private fun MemberSection(
     selectedMember: String?,
-    memberList: List<InputAssignItemScreenModel.MemberItem>
+    memberList: List<InputAssignItemScreenModel.MemberItem>,
+    onClickClose: (index: Int) -> Unit = {},
+    onClickItem: (index: Int) -> Unit = {}
 ) {
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -143,7 +211,16 @@ private fun MemberSection(
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
             memberList.fastForEachIndexed { index, item ->
                 val isSelected = item.id == selectedMember || selectedMember == null && index == 0
-                PeopleItem(isSelected)
+                PeopleItem(
+                    isSelected,
+                    onClickClose = {
+                        onClickClose(index)
+                    },
+                    onClick = {
+                        onClickItem(index)
+                    },
+                    isShowClose = item.id != "YOU"
+                )
             }
         }
 
@@ -215,8 +292,9 @@ private fun MenuItem(
 
             val people = item.memberIds.size
             AnimatedVisibility(people > 0) {
-                Spacer(Modifier.height(Spacing.xs))
                 Column {
+                    Spacer(Modifier.height(Spacing.xs))
+
                     Row(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         modifier = Modifier.fillMaxWidth()
@@ -250,7 +328,9 @@ private fun MenuItem(
 
 @Composable
 private fun AssignItemBottomBar(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    total: Double,
+    onClickNext: () -> Unit = {}
 ) {
 
     Card(
@@ -285,12 +365,23 @@ private fun AssignItemBottomBar(
             )
 
             Row(
-                horizontalArrangement = Arrangement.End,
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
                     .padding(horizontal = Spacing.m, vertical = Spacing.s)
             ) {
-                Button(onClick = {}) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(Spacing.xxs)
+                ) {
+                    Text("Total", style = MaterialTheme.typography.labelLarge)
+                    Text(
+                        "Rp. ${total.toReadableCurrency()}",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
+
+                Button(onClick = onClickNext) {
                     Text("Next")
                 }
             }
@@ -299,16 +390,59 @@ private fun AssignItemBottomBar(
 }
 
 @Composable
-private fun PeopleItem(isSelected: Boolean = false) {
+private fun PeopleItem(
+    isSelected: Boolean = false,
+    onClick: () -> Unit = {},
+    onClickClose: () -> Unit = {},
+    isShowClose: Boolean = true
+) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(
-            Modifier.size(64.dp)
-                .clip(CircleShape)
-                .background(color = Color.Green)
-                .border(if (isSelected) 2.dp else 0.dp, Color.Blue, CircleShape)
-        ) {
-            Text("A")
+        Box {
+            Box(
+                Modifier.size(64.dp)
+                    .clip(CircleShape)
+                    .background(color = Color.Green)
+                    .border(if (isSelected) 2.dp else 0.dp, Color.Blue, CircleShape)
+                    .clickable {
+                        onClick()
+                    }
+            ) {
+                Text("A")
+            }
+
+            if (isShowClose) {
+                Icon(
+                    Icons.Filled.Close,
+                    "delete",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp)
+                        .clip(CircleShape)
+                        .background(
+                            MaterialTheme.colorScheme.surfaceVariant
+                        ).align(Alignment.TopEnd).clickable {
+                            onClickClose()
+                        }
+                )
+            }
         }
         Text("You")
+    }
+}
+
+@Composable
+fun AddMemberSheet(
+    member: String,
+    onMemberChange: (String) -> Unit = {},
+    onClickSave: () -> Unit = {},
+) {
+    Column(Modifier.fillMaxWidth()) {
+        OutlinedTextField(
+            value = member,
+            onValueChange = onMemberChange,
+        )
+
+        Button(onClick = onClickSave) {
+            Text("Save")
+        }
     }
 }
