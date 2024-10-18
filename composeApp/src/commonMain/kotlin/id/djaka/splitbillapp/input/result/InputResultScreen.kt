@@ -404,7 +404,7 @@ private fun InvoiceDetailItem(item: InputResultScreenModel.InvoiceDetail.Item) {
                 style = MaterialTheme.typography.labelLarge
             )
             Text(
-                item.total.toReadableCurrency(),
+                item.price.toReadableCurrency(),
                 style = MaterialTheme.typography.labelSmall,
                 color = LocalContentColor.current.copy(alpha = 0.7f)
             )
@@ -420,7 +420,7 @@ private fun InvoiceDetailItem(item: InputResultScreenModel.InvoiceDetail.Item) {
             verticalArrangement = Arrangement.spacedBy(Spacing.xs)
         ) {
             Text(
-                item.price.toReadableCurrency(),
+                item.total.toReadableCurrency(),
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.labelLarge
             )

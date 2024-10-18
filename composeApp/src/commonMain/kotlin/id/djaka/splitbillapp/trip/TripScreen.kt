@@ -12,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -36,6 +37,7 @@ import id.djaka.splitbillapp.input.result.InputResultScreen
 import id.djaka.splitbillapp.platform.CoreTheme
 import id.djaka.splitbillapp.platform.Spacing
 import id.djaka.splitbillapp.service.bill.BillModel
+import id.djaka.splitbillapp.service.trip.TripModel
 import id.djaka.splitbillapp.util.toReadableCurrency
 import id.djaka.splitbillapp.widget.PeopleWidget
 import id.djaka.splitbillapp.widget.SplitBillItem
@@ -50,6 +52,7 @@ class TripScreen(val id: String) : Screen {
             model.selectedMember = null
         }
         CoreTheme {
+            val trip = model.trip.collectAsState(null).value
             TripScreenWidget(
                 tripData = model.tripSummary.collectAsState(emptyList()).value,
                 memberSummary = model.memberBillSummary.collectAsState(emptyList()).value,
@@ -66,10 +69,14 @@ class TripScreen(val id: String) : Screen {
                         InputResultScreen(it)
                     )
                 },
-                name = model.trip.collectAsState(null).value?.name ?: "Trip",
+                name = trip?.name ?: "Trip",
                 onClickBack = {
                     navigator.pop()
-                }
+                },
+                onClickDelete = {
+                    model.delete(navigator)
+                },
+                tripModel = trip
             )
         }
     }
@@ -83,14 +90,21 @@ fun TripScreenWidget(
     tripData: List<BillModel>,
     memberSummary: List<TripScreenModel.MemberSummary>,
     selectedMember: String? = null,
+    tripModel: TripModel? = null,
     onClickMember: (String) -> Unit = {},
     onClickBill: (String) -> Unit = {},
-    onClickBack: () -> Unit = {}
+    onClickBack: () -> Unit = {},
+    onClickDelete: () -> Unit = {},
 ) {
     Scaffold(topBar = {
         TopAppBar(
             title = {
                 Text(name)
+            },
+            actions = {
+                IconButton(onClick = onClickDelete) {
+                    Icon(Icons.Default.Delete, contentDescription = "Delete")
+                }
             },
             navigationIcon = {
                 IconButton(onClick = onClickBack) {
@@ -156,7 +170,7 @@ fun TripScreenWidget(
                 modifier = Modifier.padding(horizontal = Spacing.m)
             ) {
                 tripData.fastForEach {
-                    SplitBillItem(it, onClick = { onClickBill(it.id) })
+                    SplitBillItem(it, onClick = { onClickBill(it.id) }, tripModel = tripModel)
                 }
             }
         }

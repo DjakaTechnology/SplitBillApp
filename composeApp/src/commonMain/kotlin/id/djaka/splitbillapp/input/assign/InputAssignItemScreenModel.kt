@@ -52,7 +52,7 @@ class InputAssignItemScreenModel(
                         name = item.name,
                         qty = item.qty,
                         price = item.price,
-                        memberIds = data.members.map { it.id }.toSet(),
+                        memberIdsName = data.members.associate { Pair(it.id, it.name) },
                     )
                 }
             )
@@ -90,7 +90,7 @@ class InputAssignItemScreenModel(
                             name = item.name,
                             qty = item.qty,
                             price = item.price,
-                            memberIds = item.memberIds,
+                            memberIds = item.memberIdsName.keys,
                         )
                     },
                     feeItems = feeItem.map { feeItem ->
@@ -114,13 +114,13 @@ class InputAssignItemScreenModel(
 
     fun toggleAssignMember(index: Int, memberId: String) {
         val item = menuItem[index]
-        val memberIds = item.memberIds.toMutableSet()
+        val memberIds = item.memberIdsName.toMutableMap()
         if (memberId in memberIds) {
             memberIds.remove(memberId)
         } else {
-            memberIds.add(memberId)
+            memberIds[memberId] = memberItem.first { it.id == memberId }.name
         }
-        menuItem[index] = item.copy(memberIds = memberIds)
+        menuItem[index] = item.copy(memberIdsName = memberIds)
 
         triggerAutoSave()
     }
@@ -131,9 +131,9 @@ class InputAssignItemScreenModel(
         }
         val id = memberItem[index].id
         menuItem.forEachIndexed { i, item ->
-            val memberIds = item.memberIds.toMutableSet()
+            val memberIds = item.memberIdsName.toMutableMap()
             memberIds.remove(id)
-            menuItem[i] = item.copy(memberIds = memberIds)
+            menuItem[i] = item.copy(memberIdsName = memberIds)
         }
         memberItem.removeAt(index)
 
@@ -210,9 +210,9 @@ class InputAssignItemScreenModel(
         val name: String,
         val qty: Int,
         val price: Double,
-        val memberIds: Set<String>,
+        val memberIdsName: Map<String, String>,
     ) {
         val total = price * qty
-        val pricePerMember = total / memberIds.size
+        val pricePerMember = total / memberIdsName.size
     }
 }

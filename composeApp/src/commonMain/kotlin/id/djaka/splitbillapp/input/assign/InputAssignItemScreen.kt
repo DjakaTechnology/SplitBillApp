@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -33,6 +34,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -134,13 +136,13 @@ fun InputAssignItemWidget(
     ) {
         Box(Modifier.fillMaxSize()) {
             if (showAddMemberSheet) {
-                val memberMap =  remember(memberList) {
+                val memberMap = remember(memberList) {
                     memberList.map { it.id }.toSet()
                 }
                 ModalBottomSheet(onDismissRequest = { showAddMemberSheet = false }) {
                     val state = rememberAddMemberSheetState(
                         items = contacts,
-                        existingMember =memberMap
+                        existingMember = memberMap
                     )
                     AddMemberSheet(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.m)
@@ -245,7 +247,10 @@ private fun MemberSection(
             }
         }
 
-        PeopleWidget(isShowClose = false, text = "+ Add", onClick = onClickAdd)
+        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+            VerticalDivider(thickness = 1.dp, modifier = Modifier.heightIn(max = 64.dp))
+            PeopleWidget(isShowClose = false, text = "+ Add", onClick = onClickAdd)
+        }
     }
 }
 
@@ -266,7 +271,7 @@ private fun SplitSection(
                 MenuItem(
                     it,
                     onClick = { onClickMenuItem(index) },
-                    isChecked = it.memberIds.contains(selectedMember),
+                    isChecked = it.memberIdsName.contains(selectedMember),
                     memberMap = memberMap
                 )
             }
@@ -314,7 +319,7 @@ private fun MenuItem(
                 }
             }
 
-            val people = item.memberIds.size
+            val people = item.memberIdsName.size
             AnimatedVisibility(people > 0) {
                 Column {
                     Spacer(Modifier.height(Spacing.xs))
@@ -324,11 +329,11 @@ private fun MenuItem(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Row(horizontalArrangement = Arrangement.spacedBy((-8).dp)) {
-                            item.memberIds.toList().forEach {
+                            item.memberIdsName.toList().forEach {
                                 Box(
                                     Modifier.size(16.dp)
                                         .clip(CircleShape)
-                                        .background(createRandomColorFromName(memberMap[it]?.name.orEmpty()))
+                                        .background(createRandomColorFromName(it.second))
                                         .border(
                                             1.dp,
                                             MaterialTheme.colorScheme.onSurface,

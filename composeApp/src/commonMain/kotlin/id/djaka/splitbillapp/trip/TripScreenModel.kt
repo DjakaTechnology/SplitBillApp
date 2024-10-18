@@ -5,11 +5,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import cafe.adriel.voyager.core.model.ScreenModel
+import cafe.adriel.voyager.core.model.screenModelScope
+import cafe.adriel.voyager.navigator.Navigator
 import id.djaka.splitbillapp.service.bill.BillRepository
 import id.djaka.splitbillapp.service.trip.TripRepository
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 
 class TripScreenModel(
     val billRepository: BillRepository,
@@ -74,6 +77,13 @@ class TripScreenModel(
 
             members.toMap()
         }.map { it.values.toList().sortedByDescending { it.total } }
+    }
+
+    fun delete(navigator: Navigator) {
+        screenModelScope.launch {
+            tripRepository.deleteTripData(tripId)
+            navigator.pop()
+        }
     }
 
     data class MemberSummary(

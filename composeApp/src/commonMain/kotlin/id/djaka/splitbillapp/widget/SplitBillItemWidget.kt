@@ -24,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEach
 import id.djaka.splitbillapp.platform.Spacing
 import id.djaka.splitbillapp.service.bill.BillModel
 import id.djaka.splitbillapp.service.trip.TripModel
@@ -41,7 +42,7 @@ fun SplitBillItem(
         name = model.name,
         date = Instant.fromEpochMilliseconds(model.date).format(readableDateYearFormat),
         status = if (model.members.all { it.isPaid }) "All Paid" else "Unpaid",
-        people = model.members.size,
+        people = model.members.map { it.name },
         onClick = onClick,
         trip = tripModel?.name
     )
@@ -52,7 +53,7 @@ fun SplitBillItem(
     name: String = "Phoenix Omurice",
     date: String = "1 January 2022",
     status: String = "All Paid",
-    people: Int = 3,
+    people: List<String> = listOf("A", "B", "C"),
     onClick: () -> Unit = {},
     trip: String? = null
 ) {
@@ -86,20 +87,19 @@ fun SplitBillItem(
                         .background(MaterialTheme.colorScheme.surface)
                         .padding(horizontal = Spacing.xs, vertical = Spacing.xxs)
                 ) {
-                    Text("$people •", style = MaterialTheme.typography.bodyMedium)
+                    Text("${people.size} •", style = MaterialTheme.typography.bodyMedium)
                     Row(horizontalArrangement = Arrangement.spacedBy((-8).dp)) {
-                        repeat(kotlin.math.min(people, 10)) {
-                            Box(
-                                Modifier.size(16.dp)
-                                    .clip(CircleShape)
-                                    .background(SolidColor(Color.Gray))
-                                    .border(1.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
+                        people.take(10).fastForEach {
+                            PeopleWidget(
+                                size = 16.dp,
+                                isSelected = true,
+                                text = it,
+                                isShowLabel = false,
+                                backgroundAlpha = 1f
                             )
                         }
                     }
                 }
-
-
             }
         }
     }

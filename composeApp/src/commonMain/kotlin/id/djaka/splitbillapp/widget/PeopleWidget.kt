@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -31,17 +32,19 @@ fun PeopleWidget(
     onClickClose: () -> Unit = {},
     isShowClose: Boolean = false,
     isShowLabel: Boolean = true,
-    size: Dp = 64.dp
+    size: Dp = 64.dp,
+    activeBorderColor: Color = MaterialTheme.colorScheme.primary,
+    backgroundAlpha: Float = 0.5f
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box {
             Box(
                 Modifier.size(size)
                     .clip(CircleShape)
-                    .background(color = createRandomColorFromName(text).copy(alpha = 0.5f))
+                    .background(color = createRandomColorFromName(text))
                     .border(
                         if (isSelected) 2.dp else 0.dp,
-                        if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+                        if (isSelected) activeBorderColor else MaterialTheme.colorScheme.surface,
                         CircleShape
                     )
                     .clickable {

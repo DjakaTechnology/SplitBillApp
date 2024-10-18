@@ -22,7 +22,7 @@ private fun InputAssignItemScreenPreview() {
                     name = "Name",
                     qty = 1,
                     price = 10000.0,
-                    memberIds = setOf()
+                    memberIdsName = mapOf()
                 ),
             ),
             selectedMember = null,
