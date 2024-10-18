@@ -48,7 +48,7 @@ class InputCameraScreen : Screen {
             InputCameraWidget(
                 onClickCamera = {
                     navigator.push(
-                        InputItemsScreen()
+                        InputItemsScreen("DRAFT")
                     )
                 }
             )

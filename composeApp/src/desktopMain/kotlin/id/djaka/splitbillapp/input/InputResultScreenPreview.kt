@@ -1,7 +1,11 @@
 package id.djaka.splitbillapp.input
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import id.djaka.splitbillapp.input.result.InputResultDetailWidget
 import id.djaka.splitbillapp.input.result.InputResultScreenModel
 import id.djaka.splitbillapp.input.result.InputResultScreenWidget
 import id.djaka.splitbillapp.platform.CoreTheme
@@ -15,6 +19,7 @@ private fun InputResultScreenPreview() {
                 InputResultScreenModel.Member(
                     name = "Member 1",
                     total = 10000.0,
+                    id = "id",
                     menuItem = listOf(
                         InputResultScreenModel.Member.MenuItem(
                             name = "Item 1",
@@ -27,6 +32,7 @@ private fun InputResultScreenPreview() {
                     )
                 )
             ),
+            onPaidChange = {_ ,_ ->},
             invoice = InputResultScreenModel.InvoiceDetail(
                 items = listOf(
                     InputResultScreenModel.InvoiceDetail.Item(
@@ -56,5 +62,16 @@ private fun InputResultScreenPreview() {
                 )
             )
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+@Preview
+private fun InputResultDetailWidgetPreview() {
+    CoreTheme {
+        Scaffold {
+            InputResultDetailWidget()
+        }
     }
 }

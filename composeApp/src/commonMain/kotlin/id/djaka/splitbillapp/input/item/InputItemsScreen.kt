@@ -47,19 +47,22 @@ import id.djaka.splitbillapp.platform.Spacing
 import id.djaka.splitbillapp.util.toReadableCurrency
 
 @OptIn(ExperimentalVoyagerApi::class)
-class InputItemsScreen : Screen {
+data class InputItemsScreen(
+    val id: String
+) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = getScreenModel<InputItemScreenModel>()
         LifecycleEffectOnce {
+            screenModel.id = id
             screenModel.onCreate()
         }
         CoreTheme {
             InputItemsWidget(
                 onClickNext = {
                     navigator.push(
-                        InputAssignItemScreen()
+                        InputAssignItemScreen(id)
                     )
                 },
                 total = screenModel.total.collectAsState(0.0).value,

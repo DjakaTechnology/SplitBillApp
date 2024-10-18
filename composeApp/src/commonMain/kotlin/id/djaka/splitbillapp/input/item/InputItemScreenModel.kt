@@ -19,7 +19,7 @@ import kotlin.uuid.Uuid
 class InputItemScreenModel(
     val billRepository: BillRepository,
 ) : ScreenModel {
-
+    var id: String = ""
     val menuItems = mutableStateListOf<MenuItem>()
     val feeItem = mutableStateListOf<FeeItem>()
 
@@ -52,10 +52,12 @@ class InputItemScreenModel(
         autoSaveJob?.cancel()
         autoSaveJob = screenModelScope.launch {
             delay(200)
-            val existingBill = billRepository.draftBillData.first() ?: throw IllegalStateException("Draft bill not found")
+            val existingBill = billRepository.billsData.first()[id]
+                ?: throw IllegalStateException("Draft bill not found")
 
             val existingItems = existingBill.items.associateBy { it.id }
-            billRepository.saveDraftBill(
+            billRepository.saveBill(
+                id,
                 existingBill.copy(
                     items = menuItems.map {
                         BillModel.Item(

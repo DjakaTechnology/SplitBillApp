@@ -7,6 +7,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import cafe.adriel.voyager.navigator.Navigator
+import id.djaka.splitbillapp.input.result.InputResultScreen
 import id.djaka.splitbillapp.service.bill.BillModel
 import id.djaka.splitbillapp.service.bill.BillRepository
 import kotlinx.coroutines.Job
@@ -19,7 +21,7 @@ import kotlin.uuid.Uuid
 class InputAssignItemScreenModel(
     val billRepository: BillRepository
 ) : ScreenModel {
-
+    var id: String = ""
     val memberItem = mutableStateListOf<MemberItem>()
     val menuItem = mutableStateListOf<MenuItem>()
     val feeItem = mutableStateListOf<FeeItem>()
@@ -29,7 +31,8 @@ class InputAssignItemScreenModel(
 
     var currentSelectedMember by mutableStateOf<String?>(null)
 
-    fun onCreate() {
+    fun onCreate(id: String) {
+        this.id = id
         memberItem.add(
             MemberItem(
                 id = "YOU",
@@ -38,7 +41,7 @@ class InputAssignItemScreenModel(
         )
 
         screenModelScope.launch {
-            val data = billRepository.draftBillData.firstOrNull() ?: return@launch
+            val data = billRepository.billsData.firstOrNull()?.get(id) ?: return@launch
             menuItem.addAll(
                 data.items.map { item ->
                     MenuItem(
@@ -74,8 +77,9 @@ class InputAssignItemScreenModel(
     private fun triggerAutoSave() {
         autoSaveJob?.cancel()
         autoSaveJob = screenModelScope.launch {
-            val data = billRepository.draftBillData.firstOrNull() ?: return@launch
-            billRepository.saveDraftBill(
+            val data = billRepository.billsData.firstOrNull()?.get(id) ?: return@launch
+            billRepository.saveBill(
+                id,
                 data.copy(
                     items = menuItem.map { item ->
                         BillModel.Item(
@@ -90,6 +94,7 @@ class InputAssignItemScreenModel(
                         BillModel.Member(
                             id = member.id,
                             name = member.name,
+                            isPaid = false,
                         )
                     },
                 )
@@ -137,6 +142,35 @@ class InputAssignItemScreenModel(
         )
 
         triggerAutoSave()
+    }
+
+    fun onClickNext(navigator: Navigator) {
+        screenModelScope.launch {
+            val id = if (id == "DRAFT") {
+                finalizeDraft()
+            } else {
+                id
+            }
+            navigator.popUntilRoot()
+            navigator.push(
+                InputResultScreen(id)
+            )
+        }
+    }
+
+    private suspend fun finalizeDraft(): String {
+        val id = Uuid.random().toHexString()
+        val data = billRepository.billsData.firstOrNull()?.get("DRAFT")
+            ?: throw IllegalStateException("Draft not found")
+        billRepository.saveBill(
+            id,
+            data.copy(
+                id = id,
+            )
+        )
+        billRepository.deleteBill("DRAFT")
+
+        return id
     }
 
     data class MemberItem(

@@ -18,23 +18,25 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,61 +51,47 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.util.fastForEachIndexed
 import androidx.compose.ui.util.fastJoinToString
+import cafe.adriel.voyager.core.annotation.ExperimentalVoyagerApi
+import cafe.adriel.voyager.core.lifecycle.LifecycleEffectOnce
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.koin.getScreenModel
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import id.djaka.splitbillapp.platform.CoreTheme
 import id.djaka.splitbillapp.platform.Spacing
 import id.djaka.splitbillapp.util.toReadableCurrency
+import kotlinx.datetime.Clock
 
-class InputResultScreen : Screen {
+@OptIn(ExperimentalVoyagerApi::class)
+data class InputResultScreen(
+    val id: String
+) : Screen {
     @Composable
     override fun Content() {
+        val screenModel = getScreenModel<InputResultScreenModel>()
+        val navigator = LocalNavigator.currentOrThrow
+
+        LifecycleEffectOnce {
+            screenModel.onCreate(id)
+        }
         CoreTheme {
+            val bills = screenModel.billData.collectAsState(null).value
             InputResultScreenWidget(
-                member = listOf(
-                    InputResultScreenModel.Member(
-                        name = "Member 1",
-                        total = 10000.0,
-                        menuItem = listOf(
-                            InputResultScreenModel.Member.MenuItem(
-                                name = "Item 1",
-                                price = 10000.0
-                            ),
-                            InputResultScreenModel.Member.MenuItem(
-                                name = "Item 2",
-                                price = 10000.0
-                            )
-                        )
-                    )
-                ),
-                invoice = InputResultScreenModel.InvoiceDetail(
-                    items = listOf(
-                        InputResultScreenModel.InvoiceDetail.Item(
-                            name = "Item 1",
-                            price = 10000.0,
-                            qty = 1,
-                            total = 10000.0,
-                            member = listOf("Member 1", "Member 2")
-                        ),
-                        InputResultScreenModel.InvoiceDetail.Item(
-                            name = "Item 1",
-                            price = 10000.0,
-                            qty = 1,
-                            total = 10000.0,
-                            member = listOf("Member 1", "Member 2", "Member 3", "Member 4")
-                        ),
-                    ),
-                    fees = listOf(
-                        InputResultScreenModel.InvoiceDetail.Fee(
-                            name = "Discount",
-                            price = -10000.0
-                        ),
-                        InputResultScreenModel.InvoiceDetail.Fee(
-                            name = "Tax",
-                            price = 10000.0
-                        )
-                    )
-                )
+                member = screenModel.members,
+                invoice = screenModel.invoiceDetail,
+                onPaidChange = { index, it ->
+                    screenModel.setPaid(index, it)
+                },
+                onChangeDetail = {
+                    screenModel.setDetailData(it)
+                },
+                onClose = {
+                    navigator.pop()
+                },
+                name = bills?.name.orEmpty(),
+                date = bills?.date ?: Clock.System.now().toEpochMilliseconds()
             )
         }
     }
@@ -112,61 +100,106 @@ class InputResultScreen : Screen {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InputResultScreenWidget(
+    name: String = "Phoenix",
+    date: Long = Clock.System.now().toEpochMilliseconds(),
     member: List<InputResultScreenModel.Member>,
-    invoice: InputResultScreenModel.InvoiceDetail
+    invoice: InputResultScreenModel.InvoiceDetail,
+    onPaidChange: (index: Int, isChecked: Boolean) -> Unit,
+    onChangeDetail: (state: InputResultDetailWidgetState) -> Unit = {},
+    onClose: () -> Unit = {}
 ) {
     var isInvoiceModalVisible by remember { mutableStateOf(false) }
     Scaffold(topBar = {
         TopAppBar(title = {
-            Text("Phoenix Omurice")
+            Text(name)
         }, actions = {
-            IconButton(onClick = {}) {
-                Icon(Icons.Filled.Edit, "edit")
+            IconButton(onClick = onClose) {
+                Icon(Icons.Filled.Close, "close")
             }
         })
     }) {
-        Column(Modifier.padding(it), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
-            Row(
-                Modifier.fillMaxWidth().padding(start = Spacing.m, end = Spacing.xxs),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text("Japan - 24 November", style = MaterialTheme.typography.labelSmall)
-                    Text("10.000", style = MaterialTheme.typography.headlineSmall)
-                }
-                Row {
-                    IconButton(onClick = { isInvoiceModalVisible = true }) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ReceiptLong,
-                            "next",
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                    IconButton(onClick = {}) {
-                        Icon(Icons.Filled.Share, "share")
-                    }
+        if (isInvoiceModalVisible) {
+            ModalBottomSheet(onDismissRequest = { isInvoiceModalVisible = false }) {
+                Column(Modifier.padding(horizontal = Spacing.ml)) {
+                    InvoiceDetailSection(invoice)
                 }
             }
+        }
 
-            Column(
-                Modifier.padding(horizontal = Spacing.m),
-                verticalArrangement = Arrangement.spacedBy(Spacing.m)
-            ) {
+        if (name.isEmpty()) {
+            val state = rememberInputResultDetailWidgetState(
+                name = name,
+                date = date,
+            )
 
-                Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
-                    member.fastForEach {
-                        MemberSectionItem(it)
+            val sheetState = rememberModalBottomSheetState()
+            LaunchedEffect(sheetState.isVisible) {
+                if (!sheetState.isVisible) sheetState.show()
+            }
+            ModalBottomSheet(onDismissRequest = {}, sheetState = sheetState) {
+                InputResultDetailWidget(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Spacing.ml),
+                    state = state,
+                    onClickSave = {
+                        onChangeDetail(state)
                     }
-                }
+                )
+            }
+        }
 
-                if (isInvoiceModalVisible) {
-                    ModalBottomSheet(onDismissRequest = { isInvoiceModalVisible = false }) {
-                        Column(Modifier.padding(horizontal = Spacing.ml)) {
-                            InvoiceDetailSection(invoice)
-                        }
-                    }
-                }
+        Column(Modifier.padding(it), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
+            Header(onShowInvoice = { isInvoiceModalVisible = true })
+            MemberSection(member, onPaidChange)
+        }
+    }
+}
+
+@Composable
+private fun MemberSection(
+    member: List<InputResultScreenModel.Member>,
+    onPaidChange: (index: Int, isChecked: Boolean) -> Unit
+) {
+    Column(
+        Modifier.padding(horizontal = Spacing.m),
+        verticalArrangement = Arrangement.spacedBy(Spacing.m)
+    ) {
+
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
+            member.fastForEachIndexed { index, it ->
+                MemberSectionItem(it, onCheckChange = {
+                    onPaidChange(index, it)
+                })
+            }
+        }
+    }
+}
+
+@Composable
+private fun Header(onShowInvoice: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().padding(start = Spacing.m, end = Spacing.xxs),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column {
+            Text("Japan - 24 November", style = MaterialTheme.typography.labelSmall)
+            Text("10.000", style = MaterialTheme.typography.headlineSmall)
+        }
+        Row {
+            IconButton(onClick = { onShowInvoice() }) {
+                Icon(
+                    Icons.AutoMirrored.Filled.ReceiptLong,
+                    "next",
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            IconButton(onClick = {}) {
+                Icon(Icons.Filled.Edit, "edit")
+            }
+            IconButton(onClick = {}) {
+                Icon(Icons.Filled.Share, "share")
             }
         }
     }
@@ -206,7 +239,10 @@ private fun InvoiceDetailSection(invoice: InputResultScreenModel.InvoiceDetail) 
 }
 
 @Composable
-private fun MemberSectionItem(it: InputResultScreenModel.Member) {
+private fun MemberSectionItem(
+    data: InputResultScreenModel.Member,
+    onCheckChange: (Boolean) -> Unit = {}
+) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(Spacing.m)
@@ -225,17 +261,16 @@ private fun MemberSectionItem(it: InputResultScreenModel.Member) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column {
-                    Text(it.name, style = MaterialTheme.typography.labelMedium)
+                    Text(data.name, style = MaterialTheme.typography.labelMedium)
                     Text(
-                        it.total.toReadableCurrency(),
+                        data.total.toReadableCurrency(),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                 }
-                var isChecked by remember { mutableStateOf(true) }
                 Box(contentAlignment = Alignment.CenterEnd) {
                     androidx.compose.animation.AnimatedVisibility(
-                        visible = isChecked,
+                        visible = data.isPaid,
                         enter = slideInHorizontally { it * 4 },
                         exit = slideOutHorizontally { it * 2 }
                     ) {
@@ -258,10 +293,10 @@ private fun MemberSectionItem(it: InputResultScreenModel.Member) {
                         }
                     }
                     Switch(
-                        checked = isChecked,
-                        onCheckedChange = { isChecked = !isChecked },
+                        checked = data.isPaid,
+                        onCheckedChange = { onCheckChange(!data.isPaid) },
                         thumbContent = {
-                            if (isChecked) {
+                            if (data.isPaid) {
                                 Icon(
                                     Icons.Filled.Check,
                                     "checked",
@@ -285,7 +320,7 @@ private fun MemberSectionItem(it: InputResultScreenModel.Member) {
             verticalArrangement = Arrangement.spacedBy(Spacing.s),
             modifier = Modifier.fillMaxWidth()
         ) {
-            it.menuItem.fastForEach {
+            data.menuItem.fastForEach {
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier.fillMaxWidth()

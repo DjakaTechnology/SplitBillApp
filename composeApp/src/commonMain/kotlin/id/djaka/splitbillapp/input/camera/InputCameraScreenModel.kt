@@ -8,13 +8,17 @@ import kotlinx.coroutines.launch
 
 class InputCameraScreenModel(
     private val billRepository: BillRepository,
-): ScreenModel {
+) : ScreenModel {
     fun onCreate() {
-       screenModelScope.launch {
-           billRepository.saveDraftBill(BillModel(
-               items = emptyList(),
-               members = emptyList()
-           ))
-       }
+        screenModelScope.launch {
+            billRepository.saveBill(
+                "DRAFT",
+                BillModel(
+                    id = "DRAFT",
+                    items = emptyList(),
+                    members = emptyList()
+                )
+            )
+        }
     }
 }

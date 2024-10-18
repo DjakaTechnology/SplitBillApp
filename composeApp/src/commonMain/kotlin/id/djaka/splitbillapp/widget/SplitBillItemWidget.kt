@@ -2,6 +2,7 @@ package id.djaka.splitbillapp.widget
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,15 +25,34 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
 import id.djaka.splitbillapp.platform.Spacing
+import id.djaka.splitbillapp.service.bill.BillModel
+import id.djaka.splitbillapp.util.readableDateFormat
+import kotlinx.datetime.Instant
+import kotlinx.datetime.format
+
+@Composable
+fun SplitBillItem(
+    model: BillModel,
+    onClick: () -> Unit = {}
+) {
+    SplitBillItem(
+        name = model.name,
+        date = Instant.fromEpochMilliseconds(model.date).format(readableDateFormat),
+        status = if (model.members.all { it.isPaid }) "All Paid" else "Unpaid",
+        people = model.members.size,
+        onClick = onClick
+    )
+}
 
 @Composable
 fun SplitBillItem(
     name: String = "Phoenix Omurice",
     date: String = "1 January 2022",
     status: String = "All Paid",
-    people: Int = 3
+    people: Int = 3,
+    onClick: () -> Unit = {}
 ) {
-    Card(Modifier.fillMaxWidth()) {
+    Card(Modifier.fillMaxWidth().clickable { onClick() }) {
         Column(
             Modifier.padding(Spacing.m),
             verticalArrangement = Arrangement.spacedBy(Spacing.xxs)

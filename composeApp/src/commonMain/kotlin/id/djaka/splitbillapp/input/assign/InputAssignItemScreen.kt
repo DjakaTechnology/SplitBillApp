@@ -63,7 +63,9 @@ import id.djaka.splitbillapp.platform.CoreTheme
 import id.djaka.splitbillapp.platform.Spacing
 import id.djaka.splitbillapp.util.toReadableCurrency
 
-class InputAssignItemScreen : Screen {
+data class InputAssignItemScreen(
+    val id: String,
+) : Screen {
     @OptIn(ExperimentalVoyagerApi::class)
     @Composable
     override fun Content() {
@@ -71,7 +73,7 @@ class InputAssignItemScreen : Screen {
             val navigator = LocalNavigator.currentOrThrow
             val screenModel = getScreenModel<InputAssignItemScreenModel>()
             LifecycleEffectOnce {
-                screenModel.onCreate()
+                screenModel.onCreate(id)
             }
             val currentMember = screenModel.currentSelectedMember
                 ?: screenModel.memberItem.firstOrNull()?.id
@@ -94,7 +96,7 @@ class InputAssignItemScreen : Screen {
                     screenModel.addNewMember(it)
                 },
                 onClickNext = {
-                    navigator.push(InputResultScreen())
+                    screenModel.onClickNext(navigator)
                 }
             )
         }

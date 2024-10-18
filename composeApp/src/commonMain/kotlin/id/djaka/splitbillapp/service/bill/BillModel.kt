@@ -5,6 +5,12 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class BillModel(
+    @SerialName("id")
+    val id: String = "",
+    @SerialName("name")
+    val name: String = "",
+    @SerialName("date")
+    val date: Long = 0,
     @SerialName("items")
     val items: List<Item> = listOf(),
     @SerialName("feeItems")
@@ -17,7 +23,9 @@ data class BillModel(
         @SerialName("id")
         val id: String,
         @SerialName("name")
-        val name: String
+        val name: String,
+        @SerialName("isPaid")
+        val isPaid: Boolean,
     )
 
     @Serializable
@@ -32,7 +40,9 @@ data class BillModel(
         val price: Double,
         @SerialName("memberIds")
         val memberIds: Set<String>
-    )
+    ) {
+        val total = price * qty
+    }
 
     @Serializable
     data class FeeItem(

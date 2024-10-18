@@ -16,25 +16,43 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.util.fastForEach
+import cafe.adriel.voyager.core.annotation.ExperimentalVoyagerApi
+import cafe.adriel.voyager.core.lifecycle.LifecycleEffectOnce
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.koin.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import id.djaka.splitbillapp.input.camera.InputCameraScreen
+import id.djaka.splitbillapp.input.result.InputResultScreen
 import id.djaka.splitbillapp.platform.CoreTheme
 import id.djaka.splitbillapp.platform.Spacing
+import id.djaka.splitbillapp.service.bill.BillModel
 import id.djaka.splitbillapp.widget.SplitBillItem
 
 class HomeScreen : Screen {
+    @OptIn(ExperimentalVoyagerApi::class)
     @Composable
     override fun Content() {
+        val model = getScreenModel<HomeScreenModel>()
+        LifecycleEffectOnce {
+            model.onCreate()
+        }
         val navigator = LocalNavigator.currentOrThrow
         CoreTheme {
             HomeWidget(
                 onClickAdd = {
                     navigator.push(
                         InputCameraScreen()
+                    )
+                },
+                data = model.bills.collectAsState(emptyList()).value,
+                onClickBill = {
+                    navigator.push(
+                        InputResultScreen(it.id)
                     )
                 }
             )
@@ -44,7 +62,9 @@ class HomeScreen : Screen {
 
 @Composable
 fun HomeWidget(
-    onClickAdd: () -> Unit = {}
+    onClickAdd: () -> Unit = {},
+    data: List<BillModel>,
+    onClickBill: (BillModel) -> Unit = {}
 ) {
     Scaffold(
         floatingActionButton = {
@@ -58,13 +78,13 @@ fun HomeWidget(
             verticalArrangement = Arrangement.spacedBy(Spacing.m)
         ) {
             TripSection()
-            BillSection()
+            BillSection(data, onClickBill)
         }
     }
 }
 
 @Composable
-private fun BillSection() {
+private fun BillSection(data: List<BillModel>, onClickAdd: (index: BillModel) -> Unit = {}) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
         Text(
             "Recent Split Bills",
@@ -72,9 +92,9 @@ private fun BillSection() {
         )
 
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
-            SplitBillItem()
-            SplitBillItem()
-            SplitBillItem()
+            data.fastForEach {
+                SplitBillItem(it, onClick = { onClickAdd(it) })
+            }
         }
     }
 }

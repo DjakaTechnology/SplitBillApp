@@ -15,15 +15,9 @@ class BillRepository(
     private val billsKey = stringPreferencesKey("bills")
     private val draftBill = stringPreferencesKey("draftBill")
 
-    val draftBillData: Flow<BillModel?> by lazy {
+    val billsData: Flow<Map<String, BillModel>> by lazy {
         datastoreService.getDataStore().data.map {
-            it[draftBill]?.let { coreJson.decodeFromString(it) }
-        }
-    }
-
-    val billsData: Flow<List<BillModel>> by lazy {
-        datastoreService.getDataStore().data.map {
-            coreJson.decodeFromString(it[billsKey] ?: "[]")
+            coreJson.decodeFromString(it[billsKey] ?: "{}")
         }
     }
 
@@ -33,9 +27,21 @@ class BillRepository(
         }
     }
 
-    suspend fun saveDraftBill(bill: BillModel) {
+    suspend fun saveBill(id: String, bill: BillModel) {
         datastoreService.getDataStore().edit { preferences ->
-            preferences[draftBill] = coreJson.encodeToString(bill)
+            val data: MutableMap<String, BillModel> =
+                coreJson.decodeFromString(preferences[billsKey] ?: "{}")
+            data[id] = bill
+            preferences[billsKey] = coreJson.encodeToString(data)
+        }
+    }
+
+    suspend fun deleteBill(id: String) {
+        datastoreService.getDataStore().edit { preferences ->
+            val data: MutableMap<String, BillModel> =
+                coreJson.decodeFromString(preferences[billsKey] ?: "{}")
+            data.remove(id)
+            preferences[billsKey] = coreJson.encodeToString(data)
         }
     }
 }
