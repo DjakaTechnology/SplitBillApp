@@ -8,6 +8,7 @@ import id.djaka.splitbillapp.input.result.InputResultScreenModel
 import id.djaka.splitbillapp.service.bill.BillRepository
 import id.djaka.splitbillapp.service.datastore.DataStoreService
 import id.djaka.splitbillapp.service.trip.TripRepository
+import id.djaka.splitbillapp.trip.TripScreenModel
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
@@ -24,4 +25,5 @@ val screenModelModule = module {
     factory { InputAssignItemScreenModel(get()) }
     factoryOf(::InputResultScreenModel)
     factoryOf(::HomeScreenModel)
+    factoryOf(::TripScreenModel)
 }

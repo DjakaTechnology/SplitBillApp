@@ -2,6 +2,8 @@ package id.djaka.splitbillapp.service.bill
 
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import dev.gitlive.firebase.Firebase
+import dev.gitlive.firebase.firestore.firestore
 import id.djaka.splitbillapp.service.coreJson
 import id.djaka.splitbillapp.service.datastore.DataStoreService
 import kotlinx.coroutines.flow.Flow
@@ -13,17 +15,10 @@ class BillRepository(
     private val datastoreService: DataStoreService
 ) {
     private val billsKey = stringPreferencesKey("bills")
-    private val draftBill = stringPreferencesKey("draftBill")
 
     val billsData: Flow<Map<String, BillModel>> by lazy {
         datastoreService.getDataStore().data.map {
             coreJson.decodeFromString(it[billsKey] ?: "{}")
-        }
-    }
-
-    suspend fun saveBills(bills: List<BillModel>) {
-        datastoreService.getDataStore().edit { preferences ->
-            preferences[billsKey] = coreJson.encodeToString(bills)
         }
     }
 
@@ -33,6 +28,13 @@ class BillRepository(
                 coreJson.decodeFromString(preferences[billsKey] ?: "{}")
             data[id] = bill
             preferences[billsKey] = coreJson.encodeToString(data)
+        }
+
+        Firebase.firestore.collection("bills").document(id).set(
+            BillModel.serializer(),
+            bill
+        ) {
+            encodeDefaults = false
         }
     }
 

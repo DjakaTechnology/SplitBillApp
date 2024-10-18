@@ -47,6 +47,7 @@ import id.djaka.splitbillapp.platform.CoreTheme
 import id.djaka.splitbillapp.platform.Spacing
 import id.djaka.splitbillapp.service.bill.BillModel
 import id.djaka.splitbillapp.service.trip.TripModel
+import id.djaka.splitbillapp.trip.TripScreen
 import id.djaka.splitbillapp.util.readableDateFormat
 import id.djaka.splitbillapp.widget.SplitBillItem
 import kotlinx.datetime.Instant
@@ -80,7 +81,9 @@ class HomeScreen : Screen {
                 },
                 tripData = model.tripList.collectAsState(emptyList()).value,
                 onClickTrip = {
-
+                    navigator.push(
+                        TripScreen(it.id)
+                    )
                 },
                 onAddTrip = {
                     model.addTrip(it)

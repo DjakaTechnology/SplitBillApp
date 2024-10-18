@@ -48,6 +48,7 @@ data class BillModel(
         val memberIds: Set<String>
     ) {
         val total = price * qty
+        val pricePerMember = total / memberIds.size
     }
 
     @Serializable

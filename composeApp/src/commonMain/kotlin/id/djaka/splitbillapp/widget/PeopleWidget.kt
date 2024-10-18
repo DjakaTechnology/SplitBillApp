@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -17,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import id.djaka.splitbillapp.util.createRandomColorFromName
@@ -28,12 +30,13 @@ fun PeopleWidget(
     onClick: () -> Unit = {},
     onClickClose: () -> Unit = {},
     isShowClose: Boolean = false,
-    isShowLabel: Boolean = true
+    isShowLabel: Boolean = true,
+    size: Dp = 64.dp
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box {
             Box(
-                Modifier.size(64.dp)
+                Modifier.size(size)
                     .clip(CircleShape)
                     .background(color = createRandomColorFromName(text).copy(alpha = 0.5f))
                     .border(
@@ -49,7 +52,7 @@ fun PeopleWidget(
                 Text(
                     text.firstOrNull()?.toString().orEmpty(),
                     textAlign = TextAlign.Center,
-                    fontSize = 32.sp,
+                    fontSize = (size.value / 2).sp,
                 )
             }
 
