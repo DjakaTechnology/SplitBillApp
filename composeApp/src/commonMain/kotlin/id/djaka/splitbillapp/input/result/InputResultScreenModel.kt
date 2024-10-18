@@ -8,21 +8,34 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import id.djaka.splitbillapp.service.bill.BillModel
 import id.djaka.splitbillapp.service.bill.BillRepository
+import id.djaka.splitbillapp.service.trip.TripRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class InputResultScreenModel(
-    private val repository: BillRepository
+    private val repository: BillRepository,
+    private val tripRepository: TripRepository
 ) : ScreenModel {
     var id = ""
     val members = mutableStateListOf<Member>()
 
     var invoiceDetail by mutableStateOf(InvoiceDetail(emptyList(), emptyList()))
-    val billData = repository.billsData.map { it[id] }
+    val billData = repository.billsData.map { it[id] }.buffer(capacity = 1)
+    val tripList = tripRepository.tripData.map { it.values.toList() }.buffer(capacity = 1)
+    val tripListName = tripList.map { it.map { it.name } }
+    var total = billData.map {
+        if (it == null) return@map 0.0
+        it.items.sumOf { it.total } + it.feeItems.sumOf { it.price }
+    }
+    val tripName = combine(tripRepository.tripData, billData) { tripList, bill ->
+        tripList[bill?.tripId ?: return@combine null]?.name
+    }
 
     fun onCreate(id: String) {
         this.id = id
@@ -33,7 +46,7 @@ class InputResultScreenModel(
     }
 
     private suspend fun loadInvoiceDetail() {
-        val data = repository.billsData.first().get(id) ?: return
+        val data = repository.billsData.first()[id] ?: return
         val membersMap = data.members.associateBy { it.id }
         val items = data.items.map {
             InvoiceDetail.Item(
@@ -59,6 +72,7 @@ class InputResultScreenModel(
     }
 
     private suspend fun loadBills() {
+        members.clear()
         val data = repository.billsData.firstOrNull()?.get(id) ?: return
         val membersData = data.members.map {
             Member(
@@ -105,7 +119,7 @@ class InputResultScreenModel(
         }
 
         members.addAll(
-            membersData.values.sortedBy { it.name }
+            membersData.values.sortedBy { it.name }.filter { it.total != 0.0 }
         )
     }
 
@@ -134,10 +148,14 @@ class InputResultScreenModel(
     fun setDetailData(it: InputResultDetailWidgetState) {
         screenModelScope.launch {
             val data = billData.first() ?: return@launch
-            repository.saveBill(id, data.copy(
-                name = it.name,
-                date = it.date,
-            ))
+            val trip = tripList.first().getOrNull(it.selectedTripIndex)
+            repository.saveBill(
+                id, data.copy(
+                    name = it.name,
+                    date = it.date,
+                    tripId = trip?.id
+                )
+            )
         }
     }
 

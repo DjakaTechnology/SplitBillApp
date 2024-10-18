@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import id.djaka.splitbillapp.input.result.InputResultDetailWidget
 import id.djaka.splitbillapp.input.result.InputResultScreenModel
 import id.djaka.splitbillapp.input.result.InputResultScreenWidget
+import id.djaka.splitbillapp.input.result.rememberInputResultDetailWidgetState
 import id.djaka.splitbillapp.platform.CoreTheme
 
 @Composable
@@ -32,7 +33,8 @@ private fun InputResultScreenPreview() {
                     )
                 )
             ),
-            onPaidChange = {_ ,_ ->},
+            onPaidChange = { _, _ -> },
+            tripList = emptyList(),
             invoice = InputResultScreenModel.InvoiceDetail(
                 items = listOf(
                     InputResultScreenModel.InvoiceDetail.Item(
@@ -69,9 +71,14 @@ private fun InputResultScreenPreview() {
 @Composable
 @Preview
 private fun InputResultDetailWidgetPreview() {
+    val state = rememberInputResultDetailWidgetState(
+        tripList = listOf(
+            "Trip 1",
+        )
+    )
     CoreTheme {
         Scaffold {
-            InputResultDetailWidget()
+            InputResultDetailWidget(state = state)
         }
     }
 }

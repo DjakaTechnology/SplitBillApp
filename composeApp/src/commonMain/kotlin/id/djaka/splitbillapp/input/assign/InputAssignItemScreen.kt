@@ -19,7 +19,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.DoubleArrow
 import androidx.compose.material.icons.filled.RadioButtonChecked
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material3.Button
@@ -37,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,12 +45,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
 import cafe.adriel.voyager.core.annotation.ExperimentalVoyagerApi
 import cafe.adriel.voyager.core.lifecycle.LifecycleEffectOnce
@@ -58,10 +58,11 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import id.djaka.splitbillapp.input.result.InputResultScreen
 import id.djaka.splitbillapp.platform.CoreTheme
 import id.djaka.splitbillapp.platform.Spacing
+import id.djaka.splitbillapp.util.createRandomColorFromName
 import id.djaka.splitbillapp.util.toReadableCurrency
+import id.djaka.splitbillapp.widget.PeopleWidget
 
 data class InputAssignItemScreen(
     val id: String,
@@ -72,7 +73,7 @@ data class InputAssignItemScreen(
         CoreTheme {
             val navigator = LocalNavigator.currentOrThrow
             val screenModel = getScreenModel<InputAssignItemScreenModel>()
-            LifecycleEffectOnce {
+            LaunchedEffect(screenModel) {
                 screenModel.onCreate(id)
             }
             val currentMember = screenModel.currentSelectedMember
@@ -97,7 +98,11 @@ data class InputAssignItemScreen(
                 },
                 onClickNext = {
                     screenModel.onClickNext(navigator)
-                }
+                },
+                onClickBack = {
+                    navigator.pop()
+                },
+                feeList = screenModel.feeItem
             )
         }
     }
@@ -115,22 +120,25 @@ fun InputAssignItemWidget(
     onClickMemberItem: (index: Int) -> Unit = {},
     onClickCloseMemberItem: (index: Int) -> Unit = {},
     onAddMember: (name: String) -> Unit = {},
-    onClickNext: () -> Unit = {}
+    onClickNext: () -> Unit = {},
+    onClickBack: () -> Unit = {}
 ) {
+    var showAddMemberSheet by remember { mutableStateOf(false) }
+    val memberMap = remember(memberList) { memberList.associateBy { it.id } }
     Scaffold(
         topBar = {
             TopAppBar(title = {
                 Text("Assign Member")
             }, navigationIcon = {
-                IconButton(onClick = {}) {
+                IconButton(onClick = onClickBack) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, "back")
                 }
             })
         }
     ) {
         Box(Modifier.fillMaxSize()) {
-            if (false) {
-                ModalBottomSheet(onDismissRequest = {}) {
+            if (showAddMemberSheet) {
+                ModalBottomSheet(onDismissRequest = { showAddMemberSheet = false }) {
                     var member by remember { mutableStateOf("") }
                     AddMemberSheet(
                         member = member,
@@ -140,6 +148,7 @@ fun InputAssignItemWidget(
                         onClickSave = {
                             onAddMember(member)
                             member = ""
+                            showAddMemberSheet = false
                         }
                     )
                 }
@@ -157,10 +166,13 @@ fun InputAssignItemWidget(
                     },
                     onClickClose = {
                         onClickCloseMemberItem(it)
+                    },
+                    onClickAdd = {
+                        showAddMemberSheet = true
                     }
                 )
 
-                SplitSection(menuItems, onClickMenuItem, selectedMember)
+                SplitSection(menuItems, onClickMenuItem, selectedMember, memberMap)
 
                 HorizontalDivider(Modifier.fillMaxWidth(), 1.dp)
                 Column(
@@ -204,7 +216,8 @@ private fun MemberSection(
     selectedMember: String?,
     memberList: List<InputAssignItemScreenModel.MemberItem>,
     onClickClose: (index: Int) -> Unit = {},
-    onClickItem: (index: Int) -> Unit = {}
+    onClickItem: (index: Int) -> Unit = {},
+    onClickAdd: () -> Unit = {}
 ) {
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -213,20 +226,21 @@ private fun MemberSection(
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
             memberList.fastForEachIndexed { index, item ->
                 val isSelected = item.id == selectedMember || selectedMember == null && index == 0
-                PeopleItem(
-                    isSelected,
+                PeopleWidget(
+                    isSelected = isSelected,
                     onClickClose = {
                         onClickClose(index)
                     },
                     onClick = {
                         onClickItem(index)
                     },
-                    isShowClose = item.id != "YOU"
+                    isShowClose = true,
+                    text = item.name
                 )
             }
         }
 
-        PeopleItem()
+        PeopleWidget(isShowClose = false, text = "+ Add", onClick = onClickAdd)
     }
 }
 
@@ -234,7 +248,8 @@ private fun MemberSection(
 private fun SplitSection(
     menuItems: List<InputAssignItemScreenModel.MenuItem> = listOf(),
     onClickMenuItem: (index: Int) -> Unit = {},
-    selectedMember: String?
+    selectedMember: String?,
+    memberMap: Map<String, InputAssignItemScreenModel.MemberItem>
 ) {
     Column {
         TextButton(onClick = {}, modifier = Modifier.align(Alignment.End)) {
@@ -246,7 +261,8 @@ private fun SplitSection(
                 MenuItem(
                     it,
                     onClick = { onClickMenuItem(index) },
-                    isChecked = it.memberIds.contains(selectedMember)
+                    isChecked = it.memberIds.contains(selectedMember),
+                    memberMap = memberMap
                 )
             }
         }
@@ -257,7 +273,8 @@ private fun SplitSection(
 private fun MenuItem(
     item: InputAssignItemScreenModel.MenuItem,
     onClick: () -> Unit = {},
-    isChecked: Boolean = false
+    isChecked: Boolean = false,
+    memberMap: Map<String, InputAssignItemScreenModel.MemberItem>
 ) {
     Card(Modifier.clickable {
         onClick()
@@ -302,11 +319,11 @@ private fun MenuItem(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Row(horizontalArrangement = Arrangement.spacedBy((-8).dp)) {
-                            repeat(minOf(people, 10)) {
+                            item.memberIds.toList().forEach {
                                 Box(
                                     Modifier.size(16.dp)
                                         .clip(CircleShape)
-                                        .background(SolidColor(Color.Gray))
+                                        .background(createRandomColorFromName(memberMap[it]?.name.orEmpty()))
                                         .border(
                                             1.dp,
                                             MaterialTheme.colorScheme.onSurface,
@@ -343,29 +360,6 @@ private fun AssignItemBottomBar(
         )
     ) {
         Column {
-            TextButton(
-                onClick = {},
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(
-                    topStart = 12.dp,
-                    topEnd = 12.dp
-                )
-            ) {
-                Row(Modifier.fillMaxWidth()) {
-                    Icon(
-                        Icons.Filled.DoubleArrow, "up",
-                        modifier = Modifier.rotate(-90f).scale(0.7f)
-                    )
-                    Text("Preview Bill")
-                }
-            }
-
-            HorizontalDivider(
-                Modifier.fillMaxWidth(),
-                thickness = 0.5.dp,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
@@ -392,58 +386,24 @@ private fun AssignItemBottomBar(
 }
 
 @Composable
-private fun PeopleItem(
-    isSelected: Boolean = false,
-    onClick: () -> Unit = {},
-    onClickClose: () -> Unit = {},
-    isShowClose: Boolean = true
-) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Box {
-            Box(
-                Modifier.size(64.dp)
-                    .clip(CircleShape)
-                    .background(color = Color.Green)
-                    .border(if (isSelected) 2.dp else 0.dp, Color.Blue, CircleShape)
-                    .clickable {
-                        onClick()
-                    }
-            ) {
-                Text("A")
-            }
-
-            if (isShowClose) {
-                Icon(
-                    Icons.Filled.Close,
-                    "delete",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(20.dp)
-                        .clip(CircleShape)
-                        .background(
-                            MaterialTheme.colorScheme.surfaceVariant
-                        ).align(Alignment.TopEnd).clickable {
-                            onClickClose()
-                        }
-                )
-            }
-        }
-        Text("You")
-    }
-}
-
-@Composable
 fun AddMemberSheet(
     member: String,
     onMemberChange: (String) -> Unit = {},
     onClickSave: () -> Unit = {},
 ) {
-    Column(Modifier.fillMaxWidth()) {
+    Column(
+        Modifier.fillMaxWidth()
+            .padding(horizontal = Spacing.ml)
+            .padding(bottom = Spacing.ml),
+        verticalArrangement = Arrangement.spacedBy(Spacing.m)
+    ) {
         OutlinedTextField(
             value = member,
             onValueChange = onMemberChange,
+            modifier = Modifier.fillMaxWidth()
         )
 
-        Button(onClick = onClickSave) {
+        Button(onClick = onClickSave, modifier = Modifier.fillMaxWidth()) {
             Text("Save")
         }
     }

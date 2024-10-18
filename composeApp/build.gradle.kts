@@ -11,6 +11,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.googleServices)
 }
 
 kotlin {
@@ -43,16 +44,16 @@ kotlin {
     
     jvm("desktop")
     
-    listOf(
-        iosX64(),
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
-            baseName = "ComposeApp"
-            isStatic = true
-        }
-    }
+//    listOf(
+//        iosX64(),
+//        iosArm64(),
+//        iosSimulatorArm64()
+//    ).forEach { iosTarget ->
+//        iosTarget.binaries.framework {
+//            baseName = "ComposeApp"
+//            isStatic = true
+//        }
+//    }
     
     sourceSets {
         val desktopMain by getting
@@ -87,6 +88,11 @@ kotlin {
             implementation(libs.koin.core)
 
             implementation(libs.kotlin.serialization)
+
+            // Firebase
+            implementation(libs.firebase.auth)
+            implementation(libs.firebase.firestore)
+//            implementation(libs.firebase.crashlytics)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -117,6 +123,7 @@ android {
         }
     }
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
@@ -136,4 +143,8 @@ compose.desktop {
             packageVersion = "1.0.0"
         }
     }
+}
+
+dependencies {
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
 }

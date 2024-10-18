@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
@@ -27,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,7 +48,6 @@ import id.djaka.splitbillapp.platform.CoreTheme
 import id.djaka.splitbillapp.platform.Spacing
 import id.djaka.splitbillapp.util.toReadableCurrency
 
-@OptIn(ExperimentalVoyagerApi::class)
 data class InputItemsScreen(
     val id: String
 ) : Screen {
@@ -54,9 +55,8 @@ data class InputItemsScreen(
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = getScreenModel<InputItemScreenModel>()
-        LifecycleEffectOnce {
-            screenModel.id = id
-            screenModel.onCreate()
+        LaunchedEffect(screenModel) {
+            screenModel.onCreate(id)
         }
         CoreTheme {
             InputItemsWidget(
@@ -75,8 +75,7 @@ data class InputItemsScreen(
                 itemList = screenModel.menuItems,
                 feeList = screenModel.feeItem,
                 onFeeItemChange = { index, name, price ->
-                    screenModel.feeItem[index] =
-                        screenModel.feeItem[index].copy(name = name, price = price)
+                    screenModel.onHandleFeeItemChange(index, name, price)
                 },
                 onDeleteFee = { index ->
                     screenModel.feeItem.removeAt(index)
@@ -86,6 +85,9 @@ data class InputItemsScreen(
                 },
                 onDeleteMenuItem = { index ->
                     screenModel.menuItems.removeAt(index)
+                },
+                onClickBack = {
+                    navigator.pop()
                 }
             )
         }
@@ -104,12 +106,17 @@ fun InputItemsWidget(
     onFeeItemChange: (index: Int, name: String, price: String) -> Unit = { _, _, _ -> },
     onMenuItemChange: (index: Int, name: String, price: String, qty: String, total: String) -> Unit = { _, _, _, _, _ -> },
     onDeleteFee: (index: Int) -> Unit = { _ -> },
-    onDeleteMenuItem: (index: Int) -> Unit = { _ -> }
+    onDeleteMenuItem: (index: Int) -> Unit = { _ -> },
+    onClickBack: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
             TopAppBar(title = {
                 Text("Input Items")
+            }, navigationIcon = {
+                IconButton(onClick = onClickBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "back")
+                }
             })
         }
     ) {
@@ -255,9 +262,6 @@ private fun FeeItem(
     onDelete: () -> Unit = {}
 ) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = onDelete) {
-            Icon(Icons.Filled.Delete, "add")
-        }
         Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.weight(1f)) {
             OutlinedTextField(
                 value = name,
@@ -274,6 +278,9 @@ private fun FeeItem(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
 //            visualTransformation = CurrencyVisualTransformation()
             )
+        }
+        IconButton(onClick = onDelete) {
+            Icon(Icons.Filled.Delete, "add")
         }
     }
 }
@@ -293,10 +300,6 @@ private fun Item(
     onPriceChange: (String) -> Unit = {}
 ) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = onDelete) {
-            Icon(Icons.Filled.Delete, "add")
-        }
-
         Row(
             horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
             verticalAlignment = Alignment.CenterVertically,
@@ -307,6 +310,7 @@ private fun Item(
                     value = name,
                     label = { Text("Name") },
                     onValueChange = onNameChange,
+                    modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
                     value = price,
@@ -320,6 +324,7 @@ private fun Item(
                         keyboardType = KeyboardType.Number,
                         imeAction = ImeAction.Next
                     ),
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
             OutlinedTextField(
@@ -344,6 +349,10 @@ private fun Item(
                     imeAction = ImeAction.Next
                 )
             )
+        }
+
+        IconButton(onClick = onDelete) {
+            Icon(Icons.Filled.Delete, "add")
         }
     }
 }

@@ -9,15 +9,13 @@ import id.djaka.splitbillapp.service.bill.BillRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 @OptIn(ExperimentalUuidApi::class)
 class InputItemScreenModel(
-    val billRepository: BillRepository,
+    private val billRepository: BillRepository,
 ) : ScreenModel {
     var id: String = ""
     val menuItems = mutableStateListOf<MenuItem>()
@@ -29,22 +27,49 @@ class InputItemScreenModel(
         } + feeItem.sumOf { it.price.toDoubleOrNull() ?: 0.0 }
     }
 
-    fun onCreate() {
-        addMenuItem()
-        feeItem.add(
-            FeeItem(
-                id = Uuid.random().toHexString(),
-                name = "Discount",
-                price = "-0"
-            ),
-        )
-        feeItem.add(
-            FeeItem(
-                id = Uuid.random().toHexString(),
-                name = "Tax",
-                price = "0"
+    fun onCreate(id: String) {
+        this.id = id
+        feeItem.clear()
+        menuItems.clear()
+
+        if (id == "DRAFT") {
+            addMenuItem()
+            feeItem.add(
+                FeeItem(
+                    id = Uuid.random().toHexString(),
+                    name = "Discount",
+                    price = "-0"
+                ),
             )
-        )
+            feeItem.add(
+                FeeItem(
+                    id = Uuid.random().toHexString(),
+                    name = "Tax",
+                    price = "0"
+                )
+            )
+        } else {
+            screenModelScope.launch {
+                val data = billRepository.billsData.first()[id]
+                    ?: throw IllegalStateException("Bill not found")
+                menuItems.addAll(data.items.map {
+                    MenuItem(
+                        id = it.id,
+                        name = it.name,
+                        price = it.price.toString(),
+                        qty = it.qty.toString(),
+                        total = it.total.toString(),
+                    )
+                })
+                feeItem.addAll(data.feeItems.map {
+                    FeeItem(
+                        id = it.id,
+                        name = it.name,
+                        price = it.price.toString()
+                    )
+                })
+            }
+        }
     }
 
     private var autoSaveJob: Job? = null
@@ -53,7 +78,7 @@ class InputItemScreenModel(
         autoSaveJob = screenModelScope.launch {
             delay(200)
             val existingBill = billRepository.billsData.first()[id]
-                ?: throw IllegalStateException("Draft bill not found")
+                ?: throw IllegalStateException("Bill $id not found")
 
             val existingItems = existingBill.items.associateBy { it.id }
             billRepository.saveBill(
@@ -112,12 +137,21 @@ class InputItemScreenModel(
         val qtyInt = qty.toIntOrNull()
         menuItems[index] = menuItems[index].copy(
             name = name,
-            price = price,
-            qty = qty,
-            total = total,
+            price = price.takeIfNumeric().orEmpty(),
+            qty = qty.takeIfNumeric().orEmpty(),
+            total = total.takeIfNumeric().orEmpty(),
             priceAutoFill = if (qtyInt != null) (total.toDoubleOrNull() ?: 0.0) / qtyInt else 0.0,
             totalAutoFill = if (qtyInt != null) (price.toDoubleOrNull() ?: 0.0) * qtyInt else 0.0
         )
+        triggerAutoSave()
+    }
+
+    private fun String.takeIfNumeric(): String? {
+        return takeIf { it.isEmpty() || it.toDoubleOrNull() != null }
+    }
+
+    fun onHandleFeeItemChange(index: Int, name: String, price: String) {
+        feeItem[index] = feeItem[index].copy(name = name, price = price)
         triggerAutoSave()
     }
 

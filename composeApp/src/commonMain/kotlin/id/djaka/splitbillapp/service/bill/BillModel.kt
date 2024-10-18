@@ -16,7 +16,11 @@ data class BillModel(
     @SerialName("feeItems")
     val feeItems: List<FeeItem> = listOf(),
     @SerialName("members")
-    val members: List<Member> = listOf()
+    val members: List<Member> = listOf(),
+    @SerialName("ownerServerId")
+    val ownerServerId: String? = null,
+    @SerialName("tripId")
+    val tripId: String? = null
 ) {
     @Serializable
     data class Member(
@@ -26,6 +30,8 @@ data class BillModel(
         val name: String,
         @SerialName("isPaid")
         val isPaid: Boolean,
+        @SerialName("serverId")
+        val serverId: String? = null
     )
 
     @Serializable

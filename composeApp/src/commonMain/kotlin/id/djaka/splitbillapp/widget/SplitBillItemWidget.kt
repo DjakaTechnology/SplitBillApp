@@ -26,21 +26,24 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
 import id.djaka.splitbillapp.platform.Spacing
 import id.djaka.splitbillapp.service.bill.BillModel
-import id.djaka.splitbillapp.util.readableDateFormat
+import id.djaka.splitbillapp.service.trip.TripModel
+import id.djaka.splitbillapp.util.readableDateYearFormat
 import kotlinx.datetime.Instant
 import kotlinx.datetime.format
 
 @Composable
 fun SplitBillItem(
     model: BillModel,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
+    tripModel: TripModel? = null
 ) {
     SplitBillItem(
         name = model.name,
-        date = Instant.fromEpochMilliseconds(model.date).format(readableDateFormat),
+        date = Instant.fromEpochMilliseconds(model.date).format(readableDateYearFormat),
         status = if (model.members.all { it.isPaid }) "All Paid" else "Unpaid",
         people = model.members.size,
-        onClick = onClick
+        onClick = onClick,
+        trip = tripModel?.name
     )
 }
 
@@ -50,7 +53,8 @@ fun SplitBillItem(
     date: String = "1 January 2022",
     status: String = "All Paid",
     people: Int = 3,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
+    trip: String? = null
 ) {
     Card(Modifier.fillMaxWidth().clickable { onClick() }) {
         Column(
@@ -60,7 +64,7 @@ fun SplitBillItem(
             Text(name, style = MaterialTheme.typography.titleMedium)
 
             Text(
-                "You • $date",
+                "${trip ?: "No Trip"} • $date",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
             )

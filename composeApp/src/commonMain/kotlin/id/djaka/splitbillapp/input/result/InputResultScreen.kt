@@ -3,6 +3,7 @@ package id.djaka.splitbillapp.input.result
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,6 +49,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastForEach
@@ -59,10 +61,15 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import id.djaka.splitbillapp.input.item.InputItemsScreen
 import id.djaka.splitbillapp.platform.CoreTheme
 import id.djaka.splitbillapp.platform.Spacing
+import id.djaka.splitbillapp.util.readableDateYearFormat
 import id.djaka.splitbillapp.util.toReadableCurrency
+import id.djaka.splitbillapp.widget.PeopleWidget
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.format
 
 @OptIn(ExperimentalVoyagerApi::class)
 data class InputResultScreen(
@@ -73,7 +80,7 @@ data class InputResultScreen(
         val screenModel = getScreenModel<InputResultScreenModel>()
         val navigator = LocalNavigator.currentOrThrow
 
-        LifecycleEffectOnce {
+        LaunchedEffect(screenModel) {
             screenModel.onCreate(id)
         }
         CoreTheme {
@@ -91,7 +98,13 @@ data class InputResultScreen(
                     navigator.pop()
                 },
                 name = bills?.name.orEmpty(),
-                date = bills?.date ?: Clock.System.now().toEpochMilliseconds()
+                date = bills?.date ?: Clock.System.now().toEpochMilliseconds(),
+                tripList = screenModel.tripListName.collectAsState(listOf()).value,
+                total = screenModel.total.collectAsState(0.0).value,
+                onClickEdit = {
+                    navigator.push(InputItemsScreen(id))
+                },
+                tripName = screenModel.tripName.collectAsState(null).value
             )
         }
     }
@@ -104,9 +117,13 @@ fun InputResultScreenWidget(
     date: Long = Clock.System.now().toEpochMilliseconds(),
     member: List<InputResultScreenModel.Member>,
     invoice: InputResultScreenModel.InvoiceDetail,
+    tripList: List<String>,
     onPaidChange: (index: Int, isChecked: Boolean) -> Unit,
     onChangeDetail: (state: InputResultDetailWidgetState) -> Unit = {},
-    onClose: () -> Unit = {}
+    onClose: () -> Unit = {},
+    onClickEdit: () -> Unit = {},
+    total: Double = 0.0,
+    tripName: String? = null
 ) {
     var isInvoiceModalVisible by remember { mutableStateOf(false) }
     Scaffold(topBar = {
@@ -119,24 +136,33 @@ fun InputResultScreenWidget(
         })
     }) {
         if (isInvoiceModalVisible) {
-            ModalBottomSheet(onDismissRequest = { isInvoiceModalVisible = false }) {
-                Column(Modifier.padding(horizontal = Spacing.ml)) {
+            ModalBottomSheet(
+                onDismissRequest = { isInvoiceModalVisible = false },
+                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+            ) {
+                Column(Modifier.padding(horizontal = Spacing.ml).padding(bottom = Spacing.m)) {
                     InvoiceDetailSection(invoice)
                 }
             }
         }
 
-        if (name.isEmpty()) {
+        var isShowEditDetail by remember { mutableStateOf(false) }
+        if (isShowEditDetail || name.isEmpty()) {
             val state = rememberInputResultDetailWidgetState(
                 name = name,
                 date = date,
+                tripList = tripList,
+                selectTripIndex = tripList.indexOf(tripName)
             )
 
-            val sheetState = rememberModalBottomSheetState()
+            val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
             LaunchedEffect(sheetState.isVisible) {
-                if (!sheetState.isVisible) sheetState.show()
+                if (!sheetState.isVisible && name.isEmpty()) sheetState.show()
             }
-            ModalBottomSheet(onDismissRequest = {}, sheetState = sheetState) {
+            ModalBottomSheet(
+                onDismissRequest = { isShowEditDetail = false },
+                sheetState = sheetState
+            ) {
                 InputResultDetailWidget(
                     Modifier
                         .fillMaxWidth()
@@ -144,13 +170,23 @@ fun InputResultScreenWidget(
                     state = state,
                     onClickSave = {
                         onChangeDetail(state)
+                        isShowEditDetail = false
                     }
                 )
             }
         }
 
         Column(Modifier.padding(it), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
-            Header(onShowInvoice = { isInvoiceModalVisible = true })
+            Header(
+                onShowInvoice = { isInvoiceModalVisible = true },
+                onClickEditDetail = {
+                    isShowEditDetail = true
+                },
+                date = date,
+                total = total,
+                onClickEdit = onClickEdit,
+                trip = tripName
+            )
             MemberSection(member, onPaidChange)
         }
     }
@@ -177,15 +213,33 @@ private fun MemberSection(
 }
 
 @Composable
-private fun Header(onShowInvoice: () -> Unit) {
+private fun Header(
+    total: Double,
+    onShowInvoice: () -> Unit,
+    onClickEditDetail: () -> Unit = {},
+    date: Long,
+    trip: String?,
+    onClickEdit: () -> Unit = {}
+) {
     Row(
         Modifier.fillMaxWidth().padding(start = Spacing.m, end = Spacing.xxs),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column {
-            Text("Japan - 24 November", style = MaterialTheme.typography.labelSmall)
-            Text("10.000", style = MaterialTheme.typography.headlineSmall)
+            Row {
+                Text(
+                    "${trip ?: "No Trip"} - ${
+                        Instant.fromEpochMilliseconds(date).format(readableDateYearFormat)
+                    }",
+                    style = MaterialTheme.typography.labelSmall,
+                    textDecoration = TextDecoration.Underline,
+                    modifier = Modifier.clickable {
+                        onClickEditDetail()
+                    }
+                )
+            }
+            Text(total.toReadableCurrency(), style = MaterialTheme.typography.headlineSmall)
         }
         Row {
             IconButton(onClick = { onShowInvoice() }) {
@@ -195,7 +249,7 @@ private fun Header(onShowInvoice: () -> Unit) {
                     modifier = Modifier.size(24.dp)
                 )
             }
-            IconButton(onClick = {}) {
+            IconButton(onClick = onClickEdit) {
                 Icon(Icons.Filled.Edit, "edit")
             }
             IconButton(onClick = {}) {
@@ -251,11 +305,7 @@ private fun MemberSectionItem(
             horizontalArrangement = Arrangement.spacedBy(Spacing.s),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                Modifier.clip(CircleShape)
-                    .size(36.dp)
-                    .background(MaterialTheme.colorScheme.primary)
-            )
+            PeopleWidget(text = data.name, isShowLabel = false)
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()

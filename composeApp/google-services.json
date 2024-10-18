@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "435873001124",
+    "project_id": "split-bill-app-6f930",
+    "storage_bucket": "split-bill-app-6f930.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:435873001124:android:5f772ec8cb898bcf7f4031",
+        "android_client_info": {
+          "package_name": "id.djaka.splitbillapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApmLDooNc8r8YLbSD03DhvSgaJXY8NY_M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:435873001124:android:5e2ae27476c380667f4031",
+        "android_client_info": {
+          "package_name": "id.djaka.splitbillapp.SplitBillApp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApmLDooNc8r8YLbSD03DhvSgaJXY8NY_M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

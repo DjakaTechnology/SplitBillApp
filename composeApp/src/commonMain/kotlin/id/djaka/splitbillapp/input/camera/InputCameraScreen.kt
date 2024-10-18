@@ -15,12 +15,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -50,18 +53,40 @@ class InputCameraScreen : Screen {
                     navigator.push(
                         InputItemsScreen("DRAFT")
                     )
+                },
+                onClickBack = {
+                    navigator.pop()
                 }
             )
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InputCameraWidget(
-    onClickCamera: () -> Unit = {}
+    onClickCamera: () -> Unit = {},
+    onClickBack: () -> Unit = {},
 ) {
-    Scaffold {
-        Column(Modifier.fillMaxSize()) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                },
+                navigationIcon = {
+                    IconButton(
+                        onClick = onClickBack,
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            "back",
+                        )
+                    }
+                }
+            )
+        }
+    ) {
+        Column(Modifier.fillMaxSize().padding(it)) {
             Spacer(Modifier.width(Spacing.m))
             Box(
                 Modifier

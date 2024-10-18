@@ -33,12 +33,10 @@ class InputAssignItemScreenModel(
 
     fun onCreate(id: String) {
         this.id = id
-        memberItem.add(
-            MemberItem(
-                id = "YOU",
-                name = "You",
-            ),
-        )
+        memberItem.clear()
+        menuItem.clear()
+        feeItem.clear()
+        currentSelectedMember = null
 
         screenModelScope.launch {
             val data = billRepository.billsData.firstOrNull()?.get(id) ?: return@launch
@@ -54,7 +52,7 @@ class InputAssignItemScreenModel(
                 }
             )
             memberItem.addAll(
-                data.members.filter { it.id != "YOU" }.map { member ->
+                data.members.map { member ->
                     MemberItem(
                         id = member.id,
                         name = member.name,
@@ -90,6 +88,13 @@ class InputAssignItemScreenModel(
                             memberIds = item.memberIds,
                         )
                     },
+                    feeItems = feeItem.map { feeItem ->
+                        BillModel.FeeItem(
+                            id = feeItem.id,
+                            name = feeItem.name,
+                            price = feeItem.price,
+                        )
+                    },
                     members = memberItem.map { member ->
                         BillModel.Member(
                             id = member.id,
@@ -119,12 +124,13 @@ class InputAssignItemScreenModel(
         if (currentSelectedMember == memberItem[index].id) {
             currentSelectedMember = null
         }
-        memberItem.removeAt(index)
+        val id = memberItem[index].id
         menuItem.forEachIndexed { i, item ->
             val memberIds = item.memberIds.toMutableSet()
-            memberIds.remove(memberItem[index].id)
+            memberIds.remove(id)
             menuItem[i] = item.copy(memberIds = memberIds)
         }
+        memberItem.removeAt(index)
 
         triggerAutoSave()
     }
