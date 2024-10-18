@@ -11,15 +11,19 @@ import cafe.adriel.voyager.navigator.Navigator
 import id.djaka.splitbillapp.input.result.InputResultScreen
 import id.djaka.splitbillapp.service.bill.BillModel
 import id.djaka.splitbillapp.service.bill.BillRepository
+import id.djaka.splitbillapp.service.contact.ContactModel
+import id.djaka.splitbillapp.service.contact.ContactRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 @OptIn(ExperimentalUuidApi::class)
 class InputAssignItemScreenModel(
-    val billRepository: BillRepository
+    val billRepository: BillRepository,
+    val contactRepository: ContactRepository
 ) : ScreenModel {
     var id: String = ""
     val memberItem = mutableStateListOf<MemberItem>()
@@ -30,6 +34,7 @@ class InputAssignItemScreenModel(
     }
 
     var currentSelectedMember by mutableStateOf<String?>(null)
+    var contact  = contactRepository.contactData.map { it.values.toList() }
 
     fun onCreate(id: String) {
         this.id = id
@@ -139,11 +144,21 @@ class InputAssignItemScreenModel(
         currentSelectedMember = memberItem[it].id
     }
 
-    fun addNewMember(it: String) {
+    fun addNewMember(id: String?, name: String, serverId: String?) {
+        val finalId = id ?: Uuid.random().toHexString()
+        screenModelScope.launch {
+            contactRepository.saveContactData(
+                ContactModel(
+                    id = finalId,
+                    name = name,
+                    serverID = serverId,
+                )
+            )
+        }
         memberItem.add(
             MemberItem(
-                id = Uuid.random().toHexString(),
-                name = it,
+                id = finalId,
+                name = name,
             ),
         )
 

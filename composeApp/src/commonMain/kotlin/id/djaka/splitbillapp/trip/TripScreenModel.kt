@@ -73,7 +73,7 @@ class TripScreenModel(
             }
 
             members.toMap()
-        }.map { it.values.toList() }
+        }.map { it.values.toList().sortedByDescending { it.total } }
     }
 
     data class MemberSummary(

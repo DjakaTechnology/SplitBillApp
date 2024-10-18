@@ -1,5 +1,6 @@
 package id.djaka.splitbillapp.service.bill
 
+import kotlinx.datetime.Clock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -10,7 +11,7 @@ data class BillModel(
     @SerialName("name")
     val name: String = "",
     @SerialName("date")
-    val date: Long = 0,
+    val date: Long = Clock.System.now().toEpochMilliseconds(),
     @SerialName("items")
     val items: List<Item> = listOf(),
     @SerialName("feeItems")

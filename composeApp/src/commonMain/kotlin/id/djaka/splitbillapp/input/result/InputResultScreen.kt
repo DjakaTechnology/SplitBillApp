@@ -245,15 +245,15 @@ private fun Header(
             IconButton(onClick = { onShowInvoice() }) {
                 Icon(
                     Icons.AutoMirrored.Filled.ReceiptLong,
-                    "next",
+                    "recipt",
                     modifier = Modifier.size(24.dp)
                 )
             }
             IconButton(onClick = onClickEdit) {
-                Icon(Icons.Filled.Edit, "edit")
+                Icon(Icons.Filled.Edit, "edit", modifier = Modifier.size(24.dp))
             }
             IconButton(onClick = {}) {
-                Icon(Icons.Filled.Share, "share")
+                Icon(Icons.Filled.Share, "share", modifier = Modifier.size(24.dp))
             }
         }
     }

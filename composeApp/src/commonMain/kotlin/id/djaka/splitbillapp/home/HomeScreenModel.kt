@@ -25,7 +25,7 @@ class HomeScreenModel(
     val trip = tripRepository.tripData.buffer(1)
 
     val tripList = trip.map {
-        it.values.toList()
+        it.values.toList().sortedByDescending { it.endDate }
     }.catch {
         println("Error: $it")
     }

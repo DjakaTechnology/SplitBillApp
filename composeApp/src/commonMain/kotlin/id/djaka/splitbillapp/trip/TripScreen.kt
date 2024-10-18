@@ -47,6 +47,7 @@ class TripScreen(val id: String) : Screen {
         val navigator = LocalNavigator.currentOrThrow
         LaunchedEffect(id) {
             model.tripId = id
+            model.selectedMember = null
         }
         CoreTheme {
             TripScreenWidget(

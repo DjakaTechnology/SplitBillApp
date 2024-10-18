@@ -1,7 +1,12 @@
 package id.djaka.splitbillapp.input
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import id.djaka.splitbillapp.input.assign.add_member.AddMemberSheet
 import id.djaka.splitbillapp.input.assign.InputAssignItemScreenModel
 import id.djaka.splitbillapp.input.assign.InputAssignItemWidget
 import id.djaka.splitbillapp.platform.CoreTheme
@@ -27,7 +32,21 @@ private fun InputAssignItemScreenPreview() {
                     name = "Name"
                 ),
             ),
-            onClickMenuItem = {}
+            onClickMenuItem = {},
         )
+    }
+}
+
+@Composable
+@Preview
+private fun AddMemberSheetPreview() {
+    CoreTheme {
+       Surface {
+           Box(Modifier.fillMaxSize()) {
+               AddMemberSheet(
+                   onClickNew = {}
+               )
+           }
+       }
     }
 }

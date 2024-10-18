@@ -6,6 +6,7 @@ import id.djaka.splitbillapp.input.camera.InputCameraScreenModel
 import id.djaka.splitbillapp.input.item.InputItemScreenModel
 import id.djaka.splitbillapp.input.result.InputResultScreenModel
 import id.djaka.splitbillapp.service.bill.BillRepository
+import id.djaka.splitbillapp.service.contact.ContactRepository
 import id.djaka.splitbillapp.service.datastore.DataStoreService
 import id.djaka.splitbillapp.service.trip.TripRepository
 import id.djaka.splitbillapp.trip.TripScreenModel
@@ -17,12 +18,13 @@ val appModule = module {
     singleOf(::DataStoreService)
     singleOf(::BillRepository)
     singleOf(::TripRepository)
+    singleOf(::ContactRepository)
 }
 
 val screenModelModule = module {
     factory { InputCameraScreenModel(get()) }
     factory { InputItemScreenModel(get()) }
-    factory { InputAssignItemScreenModel(get()) }
+    factoryOf(::InputAssignItemScreenModel)
     factoryOf(::InputResultScreenModel)
     factoryOf(::HomeScreenModel)
     factoryOf(::TripScreenModel)

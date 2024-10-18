@@ -18,7 +18,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.RadioButtonChecked
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material3.Button
@@ -30,7 +29,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -45,21 +43,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
-import cafe.adriel.voyager.core.annotation.ExperimentalVoyagerApi
-import cafe.adriel.voyager.core.lifecycle.LifecycleEffectOnce
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import id.djaka.splitbillapp.input.assign.add_member.AddMemberSheet
+import id.djaka.splitbillapp.input.assign.add_member.rememberAddMemberSheetState
 import id.djaka.splitbillapp.platform.CoreTheme
 import id.djaka.splitbillapp.platform.Spacing
+import id.djaka.splitbillapp.service.contact.ContactModel
 import id.djaka.splitbillapp.util.createRandomColorFromName
 import id.djaka.splitbillapp.util.toReadableCurrency
 import id.djaka.splitbillapp.widget.PeopleWidget
@@ -67,7 +62,6 @@ import id.djaka.splitbillapp.widget.PeopleWidget
 data class InputAssignItemScreen(
     val id: String,
 ) : Screen {
-    @OptIn(ExperimentalVoyagerApi::class)
     @Composable
     override fun Content() {
         CoreTheme {
@@ -93,8 +87,8 @@ data class InputAssignItemScreen(
                 onClickCloseMemberItem = {
                     screenModel.removeMember(it)
                 },
-                onAddMember = {
-                    screenModel.addNewMember(it)
+                onAddMember = { id, name, serverId ->
+                    screenModel.addNewMember(id, name, serverId)
                 },
                 onClickNext = {
                     screenModel.onClickNext(navigator)
@@ -102,7 +96,8 @@ data class InputAssignItemScreen(
                 onClickBack = {
                     navigator.pop()
                 },
-                feeList = screenModel.feeItem
+                feeList = screenModel.feeItem,
+                contacts = screenModel.contact.collectAsState(listOf()).value
             )
         }
     }
@@ -119,12 +114,13 @@ fun InputAssignItemWidget(
     total: Double = 0.0,
     onClickMemberItem: (index: Int) -> Unit = {},
     onClickCloseMemberItem: (index: Int) -> Unit = {},
-    onAddMember: (name: String) -> Unit = {},
+    onAddMember: (id: String?, name: String, serverId: String?) -> Unit = { _, _, _ -> },
     onClickNext: () -> Unit = {},
-    onClickBack: () -> Unit = {}
+    onClickBack: () -> Unit = {},
+    contacts: List<ContactModel> = listOf()
 ) {
     var showAddMemberSheet by remember { mutableStateOf(false) }
-    val memberMap = remember(memberList) { memberList.associateBy { it.id } }
+    val memberMAp = remember(memberList) { memberList.associateBy { it.id } }
     Scaffold(
         topBar = {
             TopAppBar(title = {
@@ -138,16 +134,25 @@ fun InputAssignItemWidget(
     ) {
         Box(Modifier.fillMaxSize()) {
             if (showAddMemberSheet) {
+                val memberMap =  remember(memberList) {
+                    memberList.map { it.id }.toSet()
+                }
                 ModalBottomSheet(onDismissRequest = { showAddMemberSheet = false }) {
-                    var member by remember { mutableStateOf("") }
+                    val state = rememberAddMemberSheetState(
+                        items = contacts,
+                        existingMember =memberMap
+                    )
                     AddMemberSheet(
-                        member = member,
-                        onMemberChange = {
-                            member = it
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.m)
+                            .padding(bottom = Spacing.m),
+                        state,
+                        onClickNew = {
+                            onAddMember(null, state.member, null)
+                            showAddMemberSheet = false
                         },
-                        onClickSave = {
-                            onAddMember(member)
-                            member = ""
+                        onClickContact = {
+                            if (memberMap.contains(it.id)) return@AddMemberSheet
+                            onAddMember(it.id, it.name, it.serverID)
                             showAddMemberSheet = false
                         }
                     )
@@ -172,7 +177,7 @@ fun InputAssignItemWidget(
                     }
                 )
 
-                SplitSection(menuItems, onClickMenuItem, selectedMember, memberMap)
+                SplitSection(menuItems, onClickMenuItem, selectedMember, memberMAp)
 
                 HorizontalDivider(Modifier.fillMaxWidth(), 1.dp)
                 Column(
@@ -385,26 +390,3 @@ private fun AssignItemBottomBar(
     }
 }
 
-@Composable
-fun AddMemberSheet(
-    member: String,
-    onMemberChange: (String) -> Unit = {},
-    onClickSave: () -> Unit = {},
-) {
-    Column(
-        Modifier.fillMaxWidth()
-            .padding(horizontal = Spacing.ml)
-            .padding(bottom = Spacing.ml),
-        verticalArrangement = Arrangement.spacedBy(Spacing.m)
-    ) {
-        OutlinedTextField(
-            value = member,
-            onValueChange = onMemberChange,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Button(onClick = onClickSave, modifier = Modifier.fillMaxWidth()) {
-            Text("Save")
-        }
-    }
-}
