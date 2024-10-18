@@ -61,6 +61,9 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+            implementation("androidx.credentials:credentials:1.3.0-alpha01")
+            implementation("androidx.credentials:credentials-play-services-auth:1.3.0-alpha01")
+            implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0")
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -93,6 +96,11 @@ kotlin {
             implementation(libs.firebase.auth)
             implementation(libs.firebase.firestore)
 //            implementation(libs.firebase.crashlytics)
+
+            // KMP Auth
+            implementation(libs.kmpauth.google)
+            implementation(libs.kmpauth.firebase)
+            implementation(libs.kmpauth.uihelper)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

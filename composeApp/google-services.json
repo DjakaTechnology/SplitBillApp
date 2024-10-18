@@ -12,7 +12,20 @@
           "package_name": "id.djaka.splitbillapp"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "435873001124-utb13cd6eqdfc3cau8ac5k5m8vj2v5dd.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "id.djaka.splitbillapp",
+            "certificate_hash": "688b4d9496fae7a2ca2908186d54dd3d24aabc57"
+          }
+        },
+        {
+          "client_id": "435873001124-dbqi5bgapmugqa2nke7dl1uqmcavfht4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyApmLDooNc8r8YLbSD03DhvSgaJXY8NY_M"
@@ -20,26 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:435873001124:android:5e2ae27476c380667f4031",
-        "android_client_info": {
-          "package_name": "id.djaka.splitbillapp.SplitBillApp"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyApmLDooNc8r8YLbSD03DhvSgaJXY8NY_M"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "435873001124-dbqi5bgapmugqa2nke7dl1uqmcavfht4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

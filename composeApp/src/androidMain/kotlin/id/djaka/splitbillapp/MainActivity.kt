@@ -5,7 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import cafe.adriel.voyager.core.registry.screenModule
+import com.mmk.kmpauth.google.GoogleAuthCredentials
+import com.mmk.kmpauth.google.GoogleAuthProvider
 import id.djaka.splitbillapp.di.appModule
 import id.djaka.splitbillapp.di.screenModelModule
 import id.djaka.splitbillapp.service.datastore.DataStoreStorage
@@ -17,6 +18,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         DataStoreStorage.dataStore = createDataStore(this)
+        GoogleAuthProvider.create(credentials = GoogleAuthCredentials(serverId = WebClientId))
         startKoin {
             modules(appModule)
             modules(screenModelModule)

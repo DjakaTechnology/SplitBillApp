@@ -23,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,8 +38,11 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.gitlive.firebase.Firebase
+import dev.gitlive.firebase.auth.auth
 import id.djaka.splitbillapp.input.camera.InputCameraScreen
 import id.djaka.splitbillapp.input.result.InputResultScreen
+import id.djaka.splitbillapp.login.LoginScreen
 import id.djaka.splitbillapp.platform.CoreTheme
 import id.djaka.splitbillapp.platform.Spacing
 import id.djaka.splitbillapp.service.bill.BillModel
@@ -52,11 +56,15 @@ class HomeScreen : Screen {
     @OptIn(ExperimentalVoyagerApi::class)
     @Composable
     override fun Content() {
+
         val model = getScreenModel<HomeScreenModel>()
         LifecycleEffectOnce {
             model.onCreate()
         }
         val navigator = LocalNavigator.currentOrThrow
+        LaunchedEffect(navigator) {
+            if (Firebase.auth.currentUser == null) navigator.push(LoginScreen())
+        }
         CoreTheme {
             HomeWidget(
                 onClickAdd = {
