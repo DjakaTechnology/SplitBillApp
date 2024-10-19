@@ -15,6 +15,9 @@ import id.djaka.splitbillapp.service.contact.ContactModel
 import id.djaka.splitbillapp.service.contact.ContactRepository
 import id.djaka.splitbillapp.service.firebase.FirebaseService
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -94,7 +97,10 @@ class InputAssignItemScreenModel(
     private fun triggerAutoSave() {
         autoSaveJob?.cancel()
         autoSaveJob = screenModelScope.launch {
-            val data = billRepository.billsData.firstOrNull()?.get(id) ?: return@launch
+            delay(250)
+            val data = billRepository.billsData.map {
+                it[id]
+            }.filterNotNull().first() ?: return@launch
             billRepository.saveBill(
                 id,
                 data.copy(

@@ -21,7 +21,9 @@ data class BillModel(
     @SerialName("ownerServerId")
     val ownerServerId: String? = null,
     @SerialName("tripId")
-    val tripId: String? = null
+    val tripId: String? = null,
+    @SerialName("paidById")
+    val paidById: String? = null
 ) {
     @Serializable
     data class Member(

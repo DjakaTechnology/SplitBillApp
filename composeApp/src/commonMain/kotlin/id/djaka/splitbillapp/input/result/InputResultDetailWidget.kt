@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
 import id.djaka.splitbillapp.platform.Spacing
+import id.djaka.splitbillapp.service.trip.TripModel
 import id.djaka.splitbillapp.util.readableDateYearFormat
 import id.djaka.splitbillapp.widget.DatePickerPopUpWidget
 import kotlinx.datetime.Clock
@@ -36,6 +37,8 @@ class InputResultDetailWidgetState {
     var showDatePicker: Boolean by mutableStateOf(false)
     var tripList: List<String> by mutableStateOf(emptyList())
     var selectedTripIndex: Int by mutableStateOf(0)
+    var members: List<InputResultScreenModel.Member> by mutableStateOf(listOf())
+    var selectedMemberIndex: Int by mutableStateOf(0)
 }
 
 @Composable
@@ -45,6 +48,8 @@ fun rememberInputResultDetailWidgetState(
     showDatePicker: Boolean = false,
     tripList: List<String> = emptyList(),
     selectTripIndex: Int = 0,
+    members: List<InputResultScreenModel.Member> = emptyList(),
+    selectedMemberIndex: Int = 0,
 ): InputResultDetailWidgetState {
     return remember(name, date, showDatePicker, selectTripIndex) {
         InputResultDetailWidgetState().apply {
@@ -53,6 +58,8 @@ fun rememberInputResultDetailWidgetState(
             this.showDatePicker = showDatePicker
             this.tripList = tripList
             this.selectedTripIndex = selectTripIndex
+            this.members = members
+            this.selectedMemberIndex = selectedMemberIndex
         }
     }
 }
@@ -102,6 +109,44 @@ fun InputResultDetailWidget(
                             text = { Text(it) },
                             onClick = {
                                 state.selectedTripIndex = index
+                                expanded = false
+                            },
+                        )
+                    }
+                }
+            }
+        }
+
+        if (state.members.isNotEmpty()) {
+            var expanded by remember { mutableStateOf(false) }
+            Box {
+                OutlinedTextField(
+                    value = state.members.getOrNull(state.selectedMemberIndex)?.name ?: "",
+                    onValueChange = { },
+                    label = { Text("Paid By") },
+                    modifier = Modifier.fillMaxWidth(),
+                    readOnly = true,
+                    trailingIcon = {
+                        IconButton(onClick = { expanded = true }) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = "Select paid by"
+                            )
+                        }
+                    }
+                )
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = {
+                        expanded = false
+                    }
+                ) {
+                    state.members.fastForEachIndexed { index, it ->
+                        DropdownMenuItem(
+                            text = { Text(it.name) },
+                            onClick = {
+                                state.selectedMemberIndex = index
+                                expanded = false
                             },
                         )
                     }

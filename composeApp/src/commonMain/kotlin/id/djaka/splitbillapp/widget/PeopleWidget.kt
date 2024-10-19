@@ -38,8 +38,8 @@ fun PeopleWidget(
     activeBorderColor: Color = MaterialTheme.colorScheme.primary,
     backgroundAlpha: Float = 0.5f
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(Modifier.widthIn(max = size)) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.widthIn(max = size)) {
+        Box {
             Box(
                 Modifier.size(size)
                     .clip(CircleShape)
@@ -77,7 +77,7 @@ fun PeopleWidget(
             }
         }
         if (isShowLabel) {
-            Text(text, overflow = TextOverflow.Ellipsis)
+            Text(text, overflow = TextOverflow.Ellipsis, maxLines = 1)
         }
     }
 }

@@ -71,7 +71,6 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.format
 
-@OptIn(ExperimentalVoyagerApi::class)
 data class InputResultScreen(
     val id: String
 ) : Screen {
@@ -104,7 +103,8 @@ data class InputResultScreen(
                 onClickEdit = {
                     navigator.push(InputItemsScreen(id))
                 },
-                tripName = screenModel.tripName.collectAsState(null).value
+                tripName = screenModel.tripName.collectAsState(null).value,
+                paidById = bills?.paidById
             )
         }
     }
@@ -123,7 +123,8 @@ fun InputResultScreenWidget(
     onClose: () -> Unit = {},
     onClickEdit: () -> Unit = {},
     total: Double = 0.0,
-    tripName: String? = null
+    tripName: String? = null,
+    paidById: String? = null,
 ) {
     var isInvoiceModalVisible by remember { mutableStateOf(false) }
     Scaffold(topBar = {
@@ -152,7 +153,10 @@ fun InputResultScreenWidget(
                 name = name,
                 date = date,
                 tripList = tripList,
-                selectTripIndex = tripList.indexOf(tripName)
+                selectTripIndex = tripList.indexOf(tripName),
+                members = member,
+                selectedMemberIndex = member.indexOfFirst { it.id == paidById }.takeIf { it != -1 }
+                    ?: 0
             )
 
             val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)

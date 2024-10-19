@@ -17,6 +17,8 @@ data class TripModel(
     val member: List<Member> = emptyList(),
     @SerialName("ownerServerId")
     val ownerServerId: String? = null,
+    @SerialName("paidBy")
+    val paidById: String? = null
 ) {
     val isCurrentlyActive: Boolean
         get() {

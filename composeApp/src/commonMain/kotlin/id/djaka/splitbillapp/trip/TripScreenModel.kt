@@ -15,13 +15,13 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class TripScreenModel(
-    val billRepository: BillRepository,
-    val tripRepository: TripRepository
+    private val billRepository: BillRepository,
+    private val tripRepository: TripRepository
 ) : ScreenModel {
     var tripId: String = ""
     var selectedMember: String? by mutableStateOf(null)
 
-    val billSummary by lazy {
+    private val billSummary by lazy {
         billRepository.billsData.map {
             it.filter { it.value.tripId == tripId }
         }.buffer(capacity = 1)

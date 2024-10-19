@@ -13,6 +13,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
@@ -22,7 +23,7 @@ class InputResultScreenModel(
     private val repository: BillRepository,
     private val tripRepository: TripRepository
 ) : ScreenModel {
-    var id = ""
+    var id by mutableStateOf("")
     val members = mutableStateListOf<Member>()
 
     var invoiceDetail by mutableStateOf(InvoiceDetail(emptyList(), emptyList()))
@@ -46,7 +47,9 @@ class InputResultScreenModel(
     }
 
     private suspend fun loadInvoiceDetail() {
-        val data = repository.billsData.first()[id] ?: return
+        val data = repository.billsData.map {
+            it[id]
+        }.filterNotNull().first()
         val membersMap = data.members.associateBy { it.id }
         val items = data.items.map {
             InvoiceDetail.Item(
@@ -73,7 +76,9 @@ class InputResultScreenModel(
 
     private suspend fun loadBills() {
         members.clear()
-        val data = repository.billsData.firstOrNull()?.get(id) ?: return
+        val data = repository.billsData.map {
+            it[id]
+        }.filterNotNull().first()
         val membersData = data.members.map {
             Member(
                 id = it.id,
@@ -153,7 +158,8 @@ class InputResultScreenModel(
                 id, data.copy(
                     name = it.name,
                     date = it.date,
-                    tripId = trip?.id
+                    tripId = trip?.id,
+                    paidById = it.members.getOrNull(it.selectedMemberIndex)?.id
                 )
             )
         }
