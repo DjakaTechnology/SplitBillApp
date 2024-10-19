@@ -13,6 +13,7 @@ import id.djaka.splitbillapp.service.bill.BillModel
 import id.djaka.splitbillapp.service.bill.BillRepository
 import id.djaka.splitbillapp.service.contact.ContactModel
 import id.djaka.splitbillapp.service.contact.ContactRepository
+import id.djaka.splitbillapp.service.firebase.FirebaseService
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
@@ -23,7 +24,8 @@ import kotlin.uuid.Uuid
 @OptIn(ExperimentalUuidApi::class)
 class InputAssignItemScreenModel(
     val billRepository: BillRepository,
-    val contactRepository: ContactRepository
+    val contactRepository: ContactRepository,
+    val firebaseService: FirebaseService,
 ) : ScreenModel {
     var id: String = ""
     val memberItem = mutableStateListOf<MemberItem>()
@@ -34,7 +36,7 @@ class InputAssignItemScreenModel(
     }
 
     var currentSelectedMember by mutableStateOf<String?>(null)
-    var contact  = contactRepository.contactData.map { it.values.toList() }
+    var contact = contactRepository.contactData.map { it.values.toList() }
 
     fun onCreate(id: String) {
         this.id = id
@@ -73,7 +75,19 @@ class InputAssignItemScreenModel(
                     )
                 }
             )
+
+
+            if (data.members.isEmpty()) injectCurrentUserToMember()
         }
+    }
+
+    private fun injectCurrentUserToMember() {
+        val user = firebaseService.user ?: return
+        addNewMember(
+            id = user.uid,
+            name = user.displayName ?: "You",
+            serverId = user.uid
+        )
     }
 
     private var autoSaveJob: Job? = null
@@ -167,8 +181,8 @@ class InputAssignItemScreenModel(
 
     fun onClickNext(navigator: Navigator) {
         screenModelScope.launch {
-            val id = if (id == "DRAFT") {
-                finalizeDraft()
+            val id = if (id.startsWith("DRAFT")) {
+                finalizeDraft(id)
             } else {
                 id
             }
@@ -179,9 +193,9 @@ class InputAssignItemScreenModel(
         }
     }
 
-    private suspend fun finalizeDraft(): String {
+    private suspend fun finalizeDraft(oldId: String): String {
         val id = Uuid.random().toHexString()
-        val data = billRepository.billsData.firstOrNull()?.get("DRAFT")
+        val data = billRepository.billsData.firstOrNull()?.get(oldId)
             ?: throw IllegalStateException("Draft not found")
         billRepository.saveBill(
             id,
@@ -189,7 +203,7 @@ class InputAssignItemScreenModel(
                 id = id,
             )
         )
-        billRepository.deleteBill("DRAFT")
+        billRepository.deleteBill(oldId)
 
         return id
     }

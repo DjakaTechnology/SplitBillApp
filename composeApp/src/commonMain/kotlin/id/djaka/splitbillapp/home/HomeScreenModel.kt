@@ -2,6 +2,8 @@ package id.djaka.splitbillapp.home
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import dev.gitlive.firebase.Firebase
+import dev.gitlive.firebase.auth.auth
 import id.djaka.splitbillapp.service.bill.BillRepository
 import id.djaka.splitbillapp.service.trip.TripModel
 import id.djaka.splitbillapp.service.trip.TripRepository
@@ -38,6 +40,7 @@ class HomeScreenModel(
                     TripModel(
                         id = Uuid.random().toHexString(),
                         name = "No Trip",
+                        ownerServerId = Firebase.auth.currentUser?.uid
                     )
                 )
             }
@@ -51,7 +54,8 @@ class HomeScreenModel(
                     id = Uuid.random().toHexString(),
                     name = it.name,
                     startDate = it.startDate,
-                    endDate = it.endDate
+                    endDate = it.endDate,
+                    ownerServerId = Firebase.auth.currentUser?.uid
                 )
             )
         }

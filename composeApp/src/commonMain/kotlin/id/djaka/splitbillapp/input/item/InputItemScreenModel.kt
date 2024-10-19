@@ -32,7 +32,7 @@ class InputItemScreenModel(
         feeItem.clear()
         menuItems.clear()
 
-        if (id == "DRAFT") {
+        if (id.startsWith("DRAFT")) {
             addMenuItem()
             feeItem.add(
                 FeeItem(

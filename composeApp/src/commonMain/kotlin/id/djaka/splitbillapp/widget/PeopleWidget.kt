@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -19,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -37,7 +39,7 @@ fun PeopleWidget(
     backgroundAlpha: Float = 0.5f
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Box {
+        Box(Modifier.widthIn(max = size)) {
             Box(
                 Modifier.size(size)
                     .clip(CircleShape)
@@ -75,7 +77,7 @@ fun PeopleWidget(
             }
         }
         if (isShowLabel) {
-            Text(text)
+            Text(text, overflow = TextOverflow.Ellipsis)
         }
     }
 }
