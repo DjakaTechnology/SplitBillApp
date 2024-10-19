@@ -52,6 +52,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.fastFirst
+import androidx.compose.ui.util.fastFirstOrNull
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
 import androidx.compose.ui.util.fastJoinToString
@@ -189,7 +191,8 @@ fun InputResultScreenWidget(
                 date = date,
                 total = total,
                 onClickEdit = onClickEdit,
-                trip = tripName
+                trip = tripName,
+                paidByName = member.fastFirstOrNull { it.id == paidById }?.name
             )
             MemberSection(member, onPaidChange)
         }
@@ -223,7 +226,8 @@ private fun Header(
     onClickEditDetail: () -> Unit = {},
     date: Long,
     trip: String?,
-    onClickEdit: () -> Unit = {}
+    onClickEdit: () -> Unit = {},
+    paidByName: String? = null
 ) {
     Row(
         Modifier.fillMaxWidth().padding(start = Spacing.m, end = Spacing.xxs),
@@ -231,17 +235,25 @@ private fun Header(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column {
-            Row {
+            Column {
                 Text(
-                    "${trip ?: "No Trip"} - ${
-                        Instant.fromEpochMilliseconds(date).format(readableDateYearFormat)
-                    }",
+                    listOf(
+                        trip ?: "No Trip",
+                        Instant.fromEpochMilliseconds(date).format(readableDateYearFormat),
+                    ).fastJoinToString(" - "),
                     style = MaterialTheme.typography.labelSmall,
                     textDecoration = TextDecoration.Underline,
                     modifier = Modifier.clickable {
                         onClickEditDetail()
                     }
                 )
+                if (paidByName != null) {
+                    Text(
+                        "Paid by $paidByName",
+                        style = MaterialTheme.typography.labelSmall,
+                        textDecoration = TextDecoration.Underline,
+                    )
+                }
             }
             Text(total.toReadableCurrency(), style = MaterialTheme.typography.headlineSmall)
         }
