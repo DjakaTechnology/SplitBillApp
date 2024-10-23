@@ -11,6 +11,7 @@ import id.djaka.splitbillapp.service.bill.repository.BillLocalRepository
 import id.djaka.splitbillapp.service.contact.ContactRepository
 import id.djaka.splitbillapp.service.datastore.DataStoreService
 import id.djaka.splitbillapp.service.firebase.FirebaseService
+import id.djaka.splitbillapp.service.recognition.TextRecognitionService
 import id.djaka.splitbillapp.service.trip.TripRepository
 import id.djaka.splitbillapp.service.trip.repository.TripFirebaseRepository
 import id.djaka.splitbillapp.service.trip.repository.TripLocalRepository
@@ -29,6 +30,7 @@ val appModule = module {
     singleOf(::TripLocalRepository)
     singleOf(::TripFirebaseRepository)
     singleOf(::FirebaseService)
+    singleOf(::TextRecognitionService)
 }
 
 val screenModelModule = module {

@@ -19,18 +19,27 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -38,24 +47,55 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import id.djaka.splitbillapp.input.item.InputItemsScreen
 import id.djaka.splitbillapp.platform.CoreTheme
 import id.djaka.splitbillapp.platform.Spacing
+import kotlinx.coroutines.launch
 
 class InputCameraScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = getScreenModel<InputCameraScreenModel>()
+        val coroutineScope = rememberCoroutineScope()
         LaunchedEffect(screenModel) {
             screenModel.onCreate()
         }
         CoreTheme {
+            var isLoading by remember { mutableStateOf(false) }
+            if (isLoading) {
+                Dialog(onDismissRequest = {
+                    isLoading = false
+                }) {
+                    Card {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.m),
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth().padding(Spacing.m)
+                        ) {
+                            CircularProgressIndicator()
+                            Text("Loading...")
+                        }
+                    }
+                }
+            }
+
             InputCameraWidget(
-                onClickCamera = {
+                onOpenManual = {
                     navigator.push(
                         InputItemsScreen(screenModel.id)
                     )
                 },
                 onClickBack = {
                     navigator.pop()
+                },
+                onScan = {
+                    coroutineScope.launch {
+                        isLoading = true
+                        try {
+                            screenModel.onProcessCameraText(it, navigator)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                        isLoading = false
+                    }
                 }
             )
         }
@@ -65,8 +105,9 @@ class InputCameraScreen : Screen {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InputCameraWidget(
-    onClickCamera: () -> Unit = {},
+    onOpenManual: () -> Unit = {},
     onClickBack: () -> Unit = {},
+    onScan: (String) -> Unit = {},
 ) {
     Scaffold(
         topBar = {
@@ -86,6 +127,11 @@ fun InputCameraWidget(
             )
         }
     ) {
+        val recognitionState = rememberTextRecognitionState(
+            onFinishScan = {
+                onScan(it)
+            }
+        )
         Column(Modifier.fillMaxSize().padding(it)) {
             Spacer(Modifier.width(Spacing.m))
             Box(
@@ -93,8 +139,8 @@ fun InputCameraWidget(
                     .fillMaxWidth()
                     .weight(1f)
                     .clip(RoundedCornerShape(24.dp))
-                    .background(Color.Green)
             ) {
+                createTextRecognitionScreen(state = recognitionState)
                 Box(
                     Modifier.fillMaxWidth()
                         .background(
@@ -119,7 +165,9 @@ fun InputCameraWidget(
                         }
 
                         IconButton(
-                            onClick = onClickCamera,
+                            onClick = {
+                                recognitionState.onStartScan()
+                            },
                             modifier = Modifier
                                 .border(1.dp, Color.White, CircleShape)
                         ) {
@@ -131,11 +179,13 @@ fun InputCameraWidget(
                         }
 
                         IconButton(
-                            onClick = {},
+                            onClick = {
+                                onOpenManual()
+                            },
                         ) {
                             Icon(
                                 Icons.Filled.Edit,
-                                "take picture",
+                                "manual",
                             )
                         }
                     }

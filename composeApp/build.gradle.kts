@@ -64,6 +64,14 @@ kotlin {
             implementation("androidx.credentials:credentials:1.3.0-alpha01")
             implementation("androidx.credentials:credentials-play-services-auth:1.3.0-alpha01")
             implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0")
+            implementation(libs.firebase.mlkit.android)
+            implementation(libs.androidx.camera.core)
+            implementation(libs.androidx.camera.camera2)
+            implementation(libs.accompanist.permission)
+            implementation(libs.androidx.camera.lifecycle)
+            implementation(libs.androidx.camera.view)
+            implementation(libs.guava)
+            implementation(libs.play.service.mlkit.text)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -96,6 +104,7 @@ kotlin {
             implementation(libs.firebase.auth)
             implementation(libs.firebase.firestore)
 //            implementation(libs.firebase.crashlytics)
+            implementation(libs.firebase.functions)
 
             // KMP Auth
             implementation(libs.kmpauth.google)

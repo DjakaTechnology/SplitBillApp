@@ -24,8 +24,15 @@ datastore = "1.1.1"
 koin = "4.0.0"
 kotlin-serialization-json = "1.7.3"
 firebaseGitlive = "2.1.0"
+firebase = "24.0.3"
 kmpAuth = "2.1.0"
 gservices = "4.4.2"
+cameraCore = "1.3.4"
+accompanist = "0.36.0"
+cameraLifecycle = "1.3.4"
+cameraView = "1.3.4"
+guava = "32.1.3-android"
+mlkitText = "19.0.1"
 
 [libraries]
 desugar_jdk_libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar_jdk_libs" }
@@ -65,10 +72,21 @@ kotlin-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-j
 firebase-auth = { module = "dev.gitlive:firebase-auth", version.ref = "firebaseGitlive"}
 firebase-firestore = { module = "dev.gitlive:firebase-firestore", version.ref = "firebaseGitlive"}
 firebase-crashlytics = { module = "dev.gitlive:firebase-crashlytics", version.ref = "firebaseGitlive"}
+firebase-functions = { module = "dev.gitlive:firebase-functions", version.ref = "firebaseGitlive"}
+firebase-mlkit-android = { module = "com.google.firebase:firebase-ml-vision", version.ref = "firebase" }
 
 kmpauth-google = { module = "io.github.mirzemehdi:kmpauth-google", version.ref = "kmpAuth" }
 kmpauth-firebase = { module = "io.github.mirzemehdi:kmpauth-firebase", version.ref = "kmpAuth" }
 kmpauth-uihelper = { module = "io.github.mirzemehdi:kmpauth-uihelper", version.ref = "kmpAuth" }
+
+androidx-camera-core = { group = "androidx.camera", name = "camera-core", version.ref = "cameraCore" }
+androidx-camera-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "cameraCore" }
+accompanist-permission = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanist" }
+androidx-camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "cameraLifecycle" }
+androidx-camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "cameraView" }
+guava = { module = "com.google.guava:guava", version.ref = "guava" }
+
+play-service-mlkit-text = { module = "com.google.android.gms:play-services-mlkit-text-recognition", version.ref = "mlkitText" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

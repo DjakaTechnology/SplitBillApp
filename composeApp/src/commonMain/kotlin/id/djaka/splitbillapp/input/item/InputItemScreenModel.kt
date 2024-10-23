@@ -32,42 +32,42 @@ class InputItemScreenModel(
         feeItem.clear()
         menuItems.clear()
 
-        if (id.startsWith("DRAFT")) {
-            addMenuItem()
-            feeItem.add(
-                FeeItem(
-                    id = Uuid.random().toHexString(),
-                    name = "Discount",
-                    price = "-0"
-                ),
-            )
-            feeItem.add(
-                FeeItem(
-                    id = Uuid.random().toHexString(),
-                    name = "Tax",
-                    price = "0"
+        screenModelScope.launch {
+            val data = billRepository.billsData.first()[id]
+                ?: throw IllegalStateException("Bill not found")
+            menuItems.addAll(data.items.map {
+                MenuItem(
+                    id = it.id,
+                    name = it.name,
+                    price = it.price.toString(),
+                    qty = it.qty.toString(),
+                    total = it.total.toString(),
                 )
-            )
-        } else {
-            screenModelScope.launch {
-                val data = billRepository.billsData.first()[id]
-                    ?: throw IllegalStateException("Bill not found")
-                menuItems.addAll(data.items.map {
-                    MenuItem(
-                        id = it.id,
-                        name = it.name,
-                        price = it.price.toString(),
-                        qty = it.qty.toString(),
-                        total = it.total.toString(),
-                    )
-                })
-                feeItem.addAll(data.feeItems.map {
+            })
+            feeItem.addAll(data.feeItems.map {
+                FeeItem(
+                    id = it.id,
+                    name = it.name,
+                    price = it.price.toString()
+                )
+            })
+
+            if (menuItems.isEmpty() || feeItem.isEmpty()) {
+                addMenuItem()
+                feeItem.add(
                     FeeItem(
-                        id = it.id,
-                        name = it.name,
-                        price = it.price.toString()
+                        id = Uuid.random().toHexString(),
+                        name = "Discount",
+                        price = "-0"
+                    ),
+                )
+                feeItem.add(
+                    FeeItem(
+                        id = Uuid.random().toHexString(),
+                        name = "Tax",
+                        price = "0"
                     )
-                })
+                )
             }
         }
     }
