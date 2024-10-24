@@ -115,9 +115,14 @@ fun InputCameraWidget(
             )
         }
     ) {
+        var isLoading by remember { mutableStateOf(false) }
+        if (isLoading) {
+            LoadingDialog()
+        }
         val recognitionState = rememberTextRecognitionState(
             onFinishScan = {
                 onScan(it)
+                isLoading = false
             }
         )
         Column(Modifier.fillMaxSize().padding(it)) {
@@ -155,6 +160,7 @@ fun InputCameraWidget(
                         IconButton(
                             onClick = {
                                 recognitionState.onStartScan()
+                                isLoading = true
                             },
                             modifier = Modifier
                                 .border(1.dp, Color.White, CircleShape)

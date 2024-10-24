@@ -35,6 +35,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.util.fastForEach
 import cafe.adriel.voyager.core.annotation.ExperimentalVoyagerApi
 import cafe.adriel.voyager.core.lifecycle.LifecycleEffectOnce
@@ -123,7 +125,14 @@ fun HomeWidget(
         },
         topBar = {
             TopAppBar(
-                title = { Text("Home") },
+                title = {
+                    Text(
+                        "Hi, " + Firebase.auth.currentUser?.displayName,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                },
                 actions = {
                     IconButton(onClick = onClickProfile) {
                         Icon(Icons.Filled.AccountCircle, "profile")

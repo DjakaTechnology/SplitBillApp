@@ -3,7 +3,9 @@ package id.djaka.splitbillapp.input
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -15,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -22,6 +25,7 @@ import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
 import id.djaka.splitbillapp.input.camera.CameraView
 import id.djaka.splitbillapp.input.camera.TextRecognitionState
+import id.djaka.splitbillapp.platform.Spacing
 import id.djaka.splitbillapp.service.analyzer.TextRecognitionAnalyzer
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -47,15 +51,11 @@ fun TextRecognitionScreen(state: TextRecognitionState) {
                 lifecycleOwner = LocalLifecycleOwner.current,
                 analyzer = analyzer,
             )
-            if (extractedText.isNotEmpty()) {
-                Text(
-                    text = extractedText,
-                    modifier = Modifier.align(Alignment.TopStart)
-                )
-            }
         } else {
             Column(
-                Modifier.fillMaxSize(),
+                Modifier
+                    .fillMaxSize()
+                    .padding(Spacing.m),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -65,7 +65,7 @@ fun TextRecognitionScreen(state: TextRecognitionState) {
                     "Camera permission required for this feature to be available. " +
                             "Please grant the permission"
                 }
-                Text(textToShow)
+                Text(textToShow, textAlign = TextAlign.Center)
                 Button(onClick = { cameraPermissionState.launchPermissionRequest() }) {
                     Text("Request permission")
                 }
