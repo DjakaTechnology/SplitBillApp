@@ -10,17 +10,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,6 +49,7 @@ import id.djaka.splitbillapp.input.result.InputResultScreen
 import id.djaka.splitbillapp.login.LoginScreen
 import id.djaka.splitbillapp.platform.CoreTheme
 import id.djaka.splitbillapp.platform.Spacing
+import id.djaka.splitbillapp.profile.ProfileScreen
 import id.djaka.splitbillapp.service.bill.BillModel
 import id.djaka.splitbillapp.service.trip.TripModel
 import id.djaka.splitbillapp.trip.TripScreen
@@ -57,7 +62,6 @@ class HomeScreen : Screen {
     @OptIn(ExperimentalVoyagerApi::class)
     @Composable
     override fun Content() {
-
         val model = getScreenModel<HomeScreenModel>()
         LifecycleEffectOnce {
             model.onCreate()
@@ -88,7 +92,12 @@ class HomeScreen : Screen {
                 onAddTrip = {
                     model.addTrip(it)
                 },
-                tripMap = model.trip.collectAsState(emptyMap()).value
+                tripMap = model.trip.collectAsState(emptyMap()).value,
+                onClickProfile = {
+                    navigator.push(
+                        ProfileScreen()
+                    )
+                }
             )
         }
     }
@@ -103,13 +112,24 @@ fun HomeWidget(
     tripData: List<TripModel> = listOf(),
     onClickTrip: (TripModel) -> Unit = {},
     onAddTrip: (state: HomeAddTripSheetState) -> Unit = {},
-    tripMap: Map<String, TripModel> = emptyMap()
+    tripMap: Map<String, TripModel> = emptyMap(),
+    onClickProfile: () -> Unit = {}
 ) {
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = onClickAdd) {
                 Icon(Icons.Filled.Add, "add")
             }
+        },
+        topBar = {
+            TopAppBar(
+                title = { Text("Home") },
+                actions = {
+                    IconButton(onClick = onClickProfile) {
+                        Icon(Icons.Filled.AccountCircle, "profile")
+                    }
+                }
+            )
         }
     ) {
         var isShowAddTripSheet by remember { mutableStateOf(false) }
@@ -131,7 +151,8 @@ fun HomeWidget(
         }
 
         Column(
-            Modifier.fillMaxWidth().padding(Spacing.m).verticalScroll(rememberScrollState()),
+            Modifier.fillMaxWidth().padding(it).padding(Spacing.m)
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(Spacing.m)
         ) {
             TripSection(tripData, onClickTrip, {

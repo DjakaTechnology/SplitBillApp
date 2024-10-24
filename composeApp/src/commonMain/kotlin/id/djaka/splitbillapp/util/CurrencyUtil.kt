@@ -1,7 +1,6 @@
 package id.djaka.splitbillapp.util
 
-expect fun Double.toReadableCurrency(): String
-
-fun toReadableCurrency(value: Double): String {
-    return value.toReadableCurrency()
+fun Double.toReadableCurrency(): String {
+    val decimalFormatter = DecimalFormatter()
+    return decimalFormatter.formatForVisual(this.toString())
 }

@@ -4,47 +4,82 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
+import java.text.DecimalFormatSymbols
 
-class CurrencyVisualTransformation : VisualTransformation {
+class DecimalInputVisualTransformation(
+    private val decimalFormatter: DecimalFormatter = DecimalFormatter()
+) : VisualTransformation {
+
     override fun filter(text: AnnotatedString): TransformedText {
-        val originalText = text.text
-        val transformedText = originalText.toDoubleOrNull()?.toReadableCurrency().orEmpty()
-        return TransformedText(
-            AnnotatedString(transformedText),
-            CurrencyOffsetMapping(originalText, transformedText)
+
+        val inputText = text.text
+        val formattedNumber = decimalFormatter.formatForVisual(inputText)
+
+        val newText = AnnotatedString(
+            text = formattedNumber,
+            spanStyles = text.spanStyles,
+            paragraphStyles = text.paragraphStyles
         )
+
+        val offsetMapping = FixedCursorOffsetMapping(
+            contentLength = inputText.length,
+            formattedContentLength = formattedNumber.length
+        )
+
+        return TransformedText(newText, offsetMapping)
     }
 }
 
-class CurrencyOffsetMapping(originalText: String, formattedText: String) : OffsetMapping {
-    private val originalLength: Int = originalText.length
-    private val indexes = findDigitIndexes(originalText, formattedText)
+private class FixedCursorOffsetMapping(
+    private val contentLength: Int,
+    private val formattedContentLength: Int,
+) : OffsetMapping {
+    override fun originalToTransformed(offset: Int): Int = formattedContentLength
+    override fun transformedToOriginal(offset: Int): Int = contentLength
+}
 
-    private fun findDigitIndexes(firstString: String, secondString: String): List<Int> {
-        val digitIndexes = mutableListOf<Int>()
-        var currentIndex = 0
-        for (digit in firstString) {
-            // Find the index of the digit in the second string
-            val index = secondString.indexOf(digit, currentIndex)
-            if (index != -1) {
-                digitIndexes.add(index)
-                currentIndex = index + 1
-            } else {
-                // If the digit is not found, return an empty list
-                return emptyList()
+class DecimalFormatter(
+    symbols: DecimalFormatSymbols = DecimalFormatSymbols.getInstance()
+) {
+
+    private val thousandsSeparator = symbols.groupingSeparator
+    private val decimalSeparator = symbols.decimalSeparator
+
+    fun cleanup(input: String): String {
+
+        if (input.matches("\\D".toRegex())) return ""
+        if (input.matches("0+".toRegex())) return "0"
+
+        val sb = StringBuilder()
+
+        var hasDecimalSep = false
+
+        for (char in input) {
+            if (char.isDigit()) {
+                sb.append(char)
+                continue
+            }
+            if (char == decimalSeparator && !hasDecimalSep && sb.isNotEmpty()) {
+                sb.append(char)
+                hasDecimalSep = true
             }
         }
-        return digitIndexes
+
+        return sb.toString()
     }
 
-    override fun originalToTransformed(offset: Int): Int {
-        if (offset >= originalLength) {
-            return indexes.last() + 1
-        }
-        return indexes[offset]
-    }
+    fun formatForVisual(input: String): String {
 
-    override fun transformedToOriginal(offset: Int): Int {
-        return indexes.indexOfFirst { it >= offset }.takeIf { it != -1 } ?: originalLength
+        val split = input.split(decimalSeparator)
+
+        val intPart = split[0]
+            .reversed()
+            .chunked(3)
+            .joinToString(separator = thousandsSeparator.toString())
+            .reversed()
+
+        val fractionPart = split.getOrNull(1)
+
+        return if (fractionPart == null) intPart else intPart + decimalSeparator + fractionPart
     }
 }

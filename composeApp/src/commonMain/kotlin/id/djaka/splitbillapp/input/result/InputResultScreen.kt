@@ -68,6 +68,7 @@ import id.djaka.splitbillapp.platform.CoreTheme
 import id.djaka.splitbillapp.platform.Spacing
 import id.djaka.splitbillapp.util.readableDateYearFormat
 import id.djaka.splitbillapp.util.toReadableCurrency
+import id.djaka.splitbillapp.widget.LoadingDialog
 import id.djaka.splitbillapp.widget.PeopleWidget
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -86,6 +87,13 @@ data class InputResultScreen(
         }
         CoreTheme {
             val bills = screenModel.billData.collectAsState(null).value
+            if (bills == null) {
+                Scaffold {
+                    LoadingDialog()
+                }
+                return@CoreTheme
+            }
+
             InputResultScreenWidget(
                 member = screenModel.members,
                 invoice = screenModel.invoiceDetail,
@@ -98,15 +106,15 @@ data class InputResultScreen(
                 onClose = {
                     navigator.pop()
                 },
-                name = bills?.name.orEmpty(),
-                date = bills?.date ?: Clock.System.now().toEpochMilliseconds(),
+                name = bills.name,
+                date = bills.date,
                 tripList = screenModel.tripListName.collectAsState(listOf()).value,
                 total = screenModel.total.collectAsState(0.0).value,
                 onClickEdit = {
                     navigator.push(InputItemsScreen(id))
                 },
                 tripName = screenModel.tripName.collectAsState(null).value,
-                paidById = bills?.paidById
+                paidById = bills.paidById
             )
         }
     }

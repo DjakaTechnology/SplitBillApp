@@ -11,7 +11,22 @@ import id.djaka.splitbillapp.platform.CoreTheme
 private fun InputItemsWidgetPreview() {
     CoreTheme(isDarkMode = true) {
         InputItemsWidget(
-            itemList = listOf(),
+            itemList = listOf(
+                InputItemScreenModel.MenuItem(
+                    name = "Nasi Goreng",
+                    price = "200000",
+                    qty = "2",
+                    total = "2000000",
+                    id = "1"
+                ),
+                InputItemScreenModel.MenuItem(
+                    name = "Nasi Goreng haha hih hihi haha",
+                    price = "",
+                    qty = "",
+                    total = "",
+                    id = "1"
+                ),
+            ),
             feeList = listOf(
                 InputItemScreenModel.FeeItem(
                     name = "Service Charge",

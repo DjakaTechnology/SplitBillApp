@@ -47,6 +47,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import id.djaka.splitbillapp.input.item.InputItemsScreen
 import id.djaka.splitbillapp.platform.CoreTheme
 import id.djaka.splitbillapp.platform.Spacing
+import id.djaka.splitbillapp.widget.LoadingDialog
 import kotlinx.coroutines.launch
 
 class InputCameraScreen : Screen {
@@ -61,20 +62,7 @@ class InputCameraScreen : Screen {
         CoreTheme {
             var isLoading by remember { mutableStateOf(false) }
             if (isLoading) {
-                Dialog(onDismissRequest = {
-                    isLoading = false
-                }) {
-                    Card {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(Spacing.m),
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth().padding(Spacing.m)
-                        ) {
-                            CircularProgressIndicator()
-                            Text("Loading...")
-                        }
-                    }
-                }
+                LoadingDialog { isLoading = false }
             }
 
             InputCameraWidget(

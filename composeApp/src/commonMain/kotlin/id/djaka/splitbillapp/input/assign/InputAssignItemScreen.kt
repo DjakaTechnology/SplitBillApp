@@ -179,7 +179,7 @@ fun InputAssignItemWidget(
                     }
                 )
 
-                SplitSection(menuItems, onClickMenuItem, selectedMember, memberMAp)
+                SplitSection(menuItems, onClickMenuItem, selectedMember)
 
                 HorizontalDivider(Modifier.fillMaxWidth(), 1.dp)
                 Column(
@@ -258,8 +258,7 @@ private fun MemberSection(
 private fun SplitSection(
     menuItems: List<InputAssignItemScreenModel.MenuItem> = listOf(),
     onClickMenuItem: (index: Int) -> Unit = {},
-    selectedMember: String?,
-    memberMap: Map<String, InputAssignItemScreenModel.MemberItem>
+    selectedMember: String?
 ) {
     Column {
         TextButton(onClick = {}, modifier = Modifier.align(Alignment.End)) {
@@ -271,8 +270,7 @@ private fun SplitSection(
                 MenuItem(
                     it,
                     onClick = { onClickMenuItem(index) },
-                    isChecked = it.memberIdsName.contains(selectedMember),
-                    memberMap = memberMap
+                    isChecked = it.memberIdsName.contains(selectedMember)
                 )
             }
         }
@@ -283,8 +281,7 @@ private fun SplitSection(
 private fun MenuItem(
     item: InputAssignItemScreenModel.MenuItem,
     onClick: () -> Unit = {},
-    isChecked: Boolean = false,
-    memberMap: Map<String, InputAssignItemScreenModel.MemberItem>
+    isChecked: Boolean = false
 ) {
     Card(Modifier.clickable {
         onClick()
@@ -295,13 +292,13 @@ private fun MenuItem(
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Bottom
             ) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(Spacing.xs)
                 ) {
                     Text(item.name)
-                    Text(item.price.toReadableCurrency())
+                    Text(item.price.toReadableCurrency(), fontWeight = FontWeight.Bold)
                 }
 
                 Text("x${item.qty}")
@@ -381,7 +378,7 @@ private fun AssignItemBottomBar(
                 ) {
                     Text("Total", style = MaterialTheme.typography.labelLarge)
                     Text(
-                        "Rp. ${total.toReadableCurrency()}",
+                        total.toReadableCurrency(),
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleLarge
                     )
