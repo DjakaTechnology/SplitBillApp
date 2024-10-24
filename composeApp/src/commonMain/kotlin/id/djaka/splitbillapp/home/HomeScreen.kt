@@ -151,7 +151,7 @@ fun HomeWidget(
         }
 
         Column(
-            Modifier.fillMaxWidth().padding(it).padding(Spacing.m)
+            Modifier.fillMaxWidth().padding(it).padding(horizontal = Spacing.m)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(Spacing.m)
         ) {
@@ -178,7 +178,7 @@ private fun BillSection(
         ) {
             Text(
                 "Recent Split Bills",
-                style = MaterialTheme.typography.headlineMedium
+                style = MaterialTheme.typography.headlineSmall
             )
             TextButton(onClick = onClickAddBill) {
                 Icon(Icons.Filled.Add, "add")
@@ -207,7 +207,7 @@ private fun TripSection(
         ) {
             Text(
                 "Trips",
-                style = MaterialTheme.typography.headlineMedium
+                style = MaterialTheme.typography.headlineSmall
             )
 
             TextButton(onClick = onClickAddTrip) {
