@@ -6,6 +6,8 @@ import kotlinx.coroutines.flow.Flow
 interface BillRepositoryContract {
     val billsData: Flow<Map<String, BillModel>>
 
+    fun getBillFlow(id: String): Flow<BillModel?>
+
     suspend fun saveBill(id: String, bill: BillModel)
 
     suspend fun deleteBill(id: String)

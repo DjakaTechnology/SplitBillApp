@@ -20,6 +20,12 @@ class BillLocalRepository(
         }
     }
 
+    override fun getBillFlow(id: String): Flow<BillModel?> {
+        return billsData.map {
+            it[id]
+        }
+    }
+
     override suspend fun saveBill(id: String, bill: BillModel) {
         dataStoreService.getDataStore().edit { preferences ->
             val data: MutableMap<String, BillModel> =

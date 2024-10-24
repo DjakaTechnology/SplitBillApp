@@ -21,13 +21,13 @@ import kotlinx.coroutines.launch
 
 class InputResultScreenModel(
     private val repository: BillRepository,
-    private val tripRepository: TripRepository
+    tripRepository: TripRepository
 ) : ScreenModel {
     var id by mutableStateOf("")
     val members = mutableStateListOf<Member>()
 
     var invoiceDetail by mutableStateOf(InvoiceDetail(emptyList(), emptyList()))
-    val billData = repository.billsData.map { it[id] }.buffer(capacity = 1)
+    val billData by lazy { repository.getBillFlow(id).buffer(capacity = 1) }
     val tripList = tripRepository.tripData.map { it.values.toList() }.buffer(capacity = 1)
     val tripListName = tripList.map { it.map { it.name } }
     var total = billData.map {
@@ -47,9 +47,7 @@ class InputResultScreenModel(
     }
 
     private suspend fun loadInvoiceDetail() {
-        val data = repository.billsData.map {
-            it[id]
-        }.filterNotNull().first()
+        val data = repository.getBillFlow(id).filterNotNull().first()
         val membersMap = data.members.associateBy { it.id }
         val items = data.items.map {
             InvoiceDetail.Item(
@@ -76,9 +74,7 @@ class InputResultScreenModel(
 
     private suspend fun loadBills() {
         members.clear()
-        val data = repository.billsData.map {
-            it[id]
-        }.filterNotNull().first()
+        val data = billData.filterNotNull().first()
         val membersData = data.members.map {
             Member(
                 id = it.id,
@@ -137,7 +133,7 @@ class InputResultScreenModel(
     private fun triggerAutoSaveJob() {
         autoSaveJob = screenModelScope.launch {
             delay(500)
-            val data = repository.billsData.firstOrNull()?.get(id) ?: return@launch
+            val data = repository.getBillFlow(id).filterNotNull().first() ?: return@launch
             repository.saveBill(id, data.copy(
                 members = members.map {
                     BillModel.Member(

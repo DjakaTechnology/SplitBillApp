@@ -5,13 +5,11 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.navigator.Navigator
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.auth.auth
-import dev.gitlive.firebase.functions.functions
 import id.djaka.splitbillapp.input.item.InputItemsScreen
 import id.djaka.splitbillapp.service.bill.BillModel
 import id.djaka.splitbillapp.service.bill.BillRepository
 import id.djaka.splitbillapp.service.firebase.FirebaseService
 import id.djaka.splitbillapp.service.recognition.TextRecognitionService
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -45,9 +43,7 @@ class InputCameraScreenModel(
     suspend fun onProcessCameraText(text: String, navigator: Navigator) {
         if (text.isNotEmpty()) {
             val result = textRecognitionService.recognizeTextToModel(text)
-            val currentData = billRepository.billsData.map {
-                it.get(id)
-            }.filterNotNull().first()
+            val currentData = billRepository.getBillFlow(id).filterNotNull().first()
             billRepository.saveBill(id, currentData.copy(
                 items = result.items.map {
                     BillModel.Item(

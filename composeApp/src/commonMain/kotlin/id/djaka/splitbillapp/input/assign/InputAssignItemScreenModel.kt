@@ -49,7 +49,7 @@ class InputAssignItemScreenModel(
         currentSelectedMember = null
 
         screenModelScope.launch {
-            val data = billRepository.billsData.firstOrNull()?.get(id) ?: return@launch
+            val data = billRepository.getBillFlow(id).filterNotNull().first() ?: return@launch
             menuItem.addAll(
                 data.items.map { item ->
                     MenuItem(
@@ -98,9 +98,7 @@ class InputAssignItemScreenModel(
         autoSaveJob?.cancel()
         autoSaveJob = screenModelScope.launch {
             delay(250)
-            val data = billRepository.billsData.map {
-                it[id]
-            }.filterNotNull().first() ?: return@launch
+            val data = billRepository.getBillFlow(id).filterNotNull().first() ?: return@launch
             billRepository.saveBill(
                 id,
                 data.copy(
@@ -201,7 +199,7 @@ class InputAssignItemScreenModel(
 
     private suspend fun finalizeDraft(oldId: String): String {
         val id = Uuid.random().toHexString()
-        val data = billRepository.billsData.firstOrNull()?.get(oldId)
+        val data = billRepository.getBillFlow(oldId).firstOrNull()
             ?: throw IllegalStateException("Draft not found")
         billRepository.saveBill(
             id,

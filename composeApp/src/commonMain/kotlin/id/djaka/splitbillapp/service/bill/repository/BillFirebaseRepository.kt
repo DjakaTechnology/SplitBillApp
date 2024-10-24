@@ -1,7 +1,6 @@
 package id.djaka.splitbillapp.service.bill.repository
 
 import dev.gitlive.firebase.Firebase
-import dev.gitlive.firebase.auth.auth
 import dev.gitlive.firebase.firestore.CollectionReference
 import dev.gitlive.firebase.firestore.firestore
 import id.djaka.splitbillapp.service.bill.BillModel
@@ -26,6 +25,12 @@ class BillFirebaseRepository(
                 it.documents.map { it.data(BillModel.serializer()) }.associateBy { it.id }
             }
         }
+
+    override fun getBillFlow(id: String): Flow<BillModel?> {
+        return getCollection().document(id).snapshots.map {
+            it.data(BillModel.serializer())
+        }
+    }
 
     override suspend fun saveBill(id: String, bill: BillModel) {
         getCollection().document(id).set(bill)

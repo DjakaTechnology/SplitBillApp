@@ -8,6 +8,7 @@ import id.djaka.splitbillapp.service.bill.BillModel
 import id.djaka.splitbillapp.service.bill.BillRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlin.uuid.ExperimentalUuidApi
@@ -33,8 +34,7 @@ class InputItemScreenModel(
         menuItems.clear()
 
         screenModelScope.launch {
-            val data = billRepository.billsData.first()[id]
-                ?: throw IllegalStateException("Bill not found")
+            val data = billRepository.getBillFlow(id).filterNotNull().first()
             menuItems.addAll(data.items.map {
                 MenuItem(
                     id = it.id,
@@ -77,8 +77,7 @@ class InputItemScreenModel(
         autoSaveJob?.cancel()
         autoSaveJob = screenModelScope.launch {
             delay(200)
-            val existingBill = billRepository.billsData.first()[id]
-                ?: throw IllegalStateException("Bill $id not found")
+            val existingBill = billRepository.getBillFlow(id).filterNotNull().first()
 
             val existingItems = existingBill.items.associateBy { it.id }
             billRepository.saveBill(

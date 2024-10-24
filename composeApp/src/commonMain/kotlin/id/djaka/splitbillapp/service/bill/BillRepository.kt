@@ -28,6 +28,12 @@ class BillRepository(
         }
     }
 
+    override fun getBillFlow(id: String): Flow<BillModel?> {
+        return firebaseService.userFlow.flatMapConcat {
+            repo.getBillFlow(id)
+        }
+    }
+
     override suspend fun saveBill(id: String, bill: BillModel) {
         repo.saveBill(id, bill)
     }
