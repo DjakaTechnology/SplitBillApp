@@ -21,7 +21,7 @@ class HomeScreenModel(
     private val tripRepository: TripRepository,
 ) : ScreenModel {
     val bills = billRepository.billsData.map {
-        it.values.toList()
+        it.values.toList().filter { !it.id.startsWith("DRAFT") }
     }
 
     val trip = tripRepository.tripData.buffer(1)
