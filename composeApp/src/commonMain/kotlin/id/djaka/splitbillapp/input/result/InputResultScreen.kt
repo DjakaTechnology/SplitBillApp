@@ -14,7 +14,9 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.AttachMoney
@@ -84,6 +86,9 @@ data class InputResultScreen(
 
         LaunchedEffect(screenModel) {
             screenModel.onCreate(id)
+        }
+        if (screenModel.id == "") {
+            return
         }
         CoreTheme {
             val bills = screenModel.billData.collectAsState(null).value
@@ -190,7 +195,7 @@ fun InputResultScreenWidget(
             }
         }
 
-        Column(Modifier.padding(it), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
+        Column(Modifier.verticalScroll(rememberScrollState()).padding(it), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
             Header(
                 onShowInvoice = { isInvoiceModalVisible = true },
                 onClickEditDetail = {
@@ -308,7 +313,9 @@ private fun InvoiceDetailSection(invoice: InputResultScreenModel.InvoiceDetail) 
                 fontWeight = FontWeight.Bold
             )
             Text(
-                10000.0.toReadableCurrency(),
+                remember(invoice) {
+                    invoice.items.sumOf { it.total } + invoice.fees.sumOf { it.price }
+                }.toReadableCurrency(),
                 style = MaterialTheme.typography.titleLarge,
                 textAlign = TextAlign.End
             )

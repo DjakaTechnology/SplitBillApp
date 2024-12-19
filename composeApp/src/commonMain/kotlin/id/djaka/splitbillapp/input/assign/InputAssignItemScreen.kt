@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,8 +16,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.RadioButtonChecked
@@ -162,7 +166,7 @@ fun InputAssignItemWidget(
             }
 
             Column(
-                Modifier.padding(it).padding(horizontal = Spacing.m),
+                Modifier.verticalScroll(rememberScrollState()).padding(it).padding(horizontal = Spacing.m),
                 verticalArrangement = Arrangement.spacedBy(Spacing.m)
             ) {
                 MemberSection(
@@ -227,8 +231,7 @@ private fun MemberSection(
     onClickAdd: () -> Unit = {}
 ) {
     Row(
-        horizontalArrangement = Arrangement.SpaceBetween,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
             memberList.fastForEachIndexed { index, item ->
@@ -246,6 +249,8 @@ private fun MemberSection(
                 )
             }
         }
+
+        Spacer(Modifier.width(Spacing.s))
 
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
             VerticalDivider(thickness = 1.dp, modifier = Modifier.heightIn(max = 64.dp))
@@ -295,9 +300,10 @@ private fun MenuItem(
                 verticalAlignment = Alignment.Bottom
             ) {
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                    verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+                    modifier = Modifier.weight(2f)
                 ) {
-                    Text(item.name)
+                    Text(item.name.trim())
                     Text(item.price.toReadableCurrency(), fontWeight = FontWeight.Bold)
                 }
 
@@ -305,7 +311,8 @@ private fun MenuItem(
 
                 Column(
                     horizontalAlignment = Alignment.End,
-                    verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                    verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+                    modifier = Modifier.weight(1f)
                 ) {
                     if (isChecked) {
                         Icon(Icons.Filled.RadioButtonChecked, "checked")

@@ -2,7 +2,7 @@
   "project_info": {
     "project_number": "435873001124",
     "project_id": "split-bill-app-6f930",
-    "storage_bucket": "split-bill-app-6f930.appspot.com"
+    "storage_bucket": "split-bill-app-6f930.firebasestorage.app"
   },
   "client": [
     {
@@ -13,6 +13,14 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "435873001124-fgqovv602av2g6a0snq5de7ki0n432bg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "id.djaka.splitbillapp",
+            "certificate_hash": "30702b54355a8a39e178e4ef90978956531705d5"
+          }
+        },
         {
           "client_id": "435873001124-utb13cd6eqdfc3cau8ac5k5m8vj2v5dd.apps.googleusercontent.com",
           "client_type": 1,

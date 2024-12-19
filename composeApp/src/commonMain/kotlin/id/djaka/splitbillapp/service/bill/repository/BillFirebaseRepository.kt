@@ -1,5 +1,6 @@
 package id.djaka.splitbillapp.service.bill.repository
 
+import android.util.Log
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.firestore.CollectionReference
 import dev.gitlive.firebase.firestore.firestore
@@ -27,6 +28,7 @@ class BillFirebaseRepository(
         }
 
     override fun getBillFlow(id: String): Flow<BillModel?> {
+        Log.d("DJAKAAA", id)
         return getCollection().document(id).snapshots.map {
             it.data(BillModel.serializer())
         }

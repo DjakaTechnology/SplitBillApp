@@ -30,12 +30,16 @@ class InputResultScreenModel(
     val billData by lazy { repository.getBillFlow(id).buffer(capacity = 1) }
     val tripList = tripRepository.tripData.map { it.values.toList() }.buffer(capacity = 1)
     val tripListName = tripList.map { it.map { it.name } }
-    var total = billData.map {
-        if (it == null) return@map 0.0
-        it.items.sumOf { it.total } + it.feeItems.sumOf { it.price }
+    val total by lazy {
+        billData.map {
+            if (it == null) return@map 0.0
+            it.items.sumOf { it.total } + it.feeItems.sumOf { it.price }
+        }
     }
-    val tripName = combine(tripRepository.tripData, billData) { tripList, bill ->
-        tripList[bill?.tripId ?: return@combine null]?.name
+    val tripName by lazy {
+        combine(tripRepository.tripData, billData) { tripList, bill ->
+            tripList[bill?.tripId ?: return@combine null]?.name
+        }
     }
 
     fun onCreate(id: String) {
