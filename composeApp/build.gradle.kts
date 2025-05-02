@@ -105,6 +105,7 @@ kotlin {
             implementation(libs.firebase.firestore)
 //            implementation(libs.firebase.crashlytics)
             implementation(libs.firebase.functions)
+            implementation(libs.firebase.config)
 
             // KMP Auth
             implementation(libs.kmpauth.google)

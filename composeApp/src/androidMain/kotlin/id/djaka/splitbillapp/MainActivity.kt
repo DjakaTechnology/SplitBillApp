@@ -2,33 +2,25 @@ package id.djaka.splitbillapp
 
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.tooling.preview.Preview
-import com.mmk.kmpauth.google.GoogleAuthCredentials
-import com.mmk.kmpauth.google.GoogleAuthProvider
-import id.djaka.splitbillapp.di.appModule
-import id.djaka.splitbillapp.di.screenModelModule
+import androidx.lifecycle.lifecycleScope
+import dev.gitlive.firebase.Firebase
+import dev.gitlive.firebase.remoteconfig.remoteConfig
 import id.djaka.splitbillapp.platform.LocalDarkColorScheme
 import id.djaka.splitbillapp.platform.LocalLightColorScheme
-import id.djaka.splitbillapp.service.datastore.DataStoreStorage
-import id.djaka.splitbillapp.service.datastore.createDataStore
-import org.koin.core.context.startKoin
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        DataStoreStorage.dataStore = createDataStore(this)
-        GoogleAuthProvider.create(credentials = GoogleAuthCredentials(serverId = WebClientId))
-        startKoin {
-            modules(appModule)
-            modules(screenModelModule)
-        }
 
         setContent {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -42,6 +34,14 @@ class MainActivity : ComponentActivity() {
                 App()
             }
 
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        lifecycleScope.launch {
+            Firebase.remoteConfig.fetch()
+            Log.d("DJAKAA", Firebase.remoteConfig.fetchAndActivate().toString())
         }
     }
 }

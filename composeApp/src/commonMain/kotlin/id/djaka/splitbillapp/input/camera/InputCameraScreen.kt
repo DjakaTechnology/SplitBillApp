@@ -44,6 +44,8 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.gitlive.firebase.Firebase
+import dev.gitlive.firebase.remoteconfig.remoteConfig
 import id.djaka.splitbillapp.input.item.InputItemsScreen
 import id.djaka.splitbillapp.platform.CoreTheme
 import id.djaka.splitbillapp.platform.Spacing
@@ -58,6 +60,12 @@ class InputCameraScreen : Screen {
         val coroutineScope = rememberCoroutineScope()
         LaunchedEffect(screenModel) {
             screenModel.onCreate()
+            if (!Firebase.remoteConfig.getValue("cloudVision").asBoolean()) {
+                navigator.pop()
+                navigator.push(
+                    InputItemsScreen(screenModel.id)
+                )
+            }
         }
         CoreTheme {
             var isLoading by remember { mutableStateOf(false) }

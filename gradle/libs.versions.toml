@@ -74,6 +74,7 @@ firebase-firestore = { module = "dev.gitlive:firebase-firestore", version.ref = 
 firebase-crashlytics = { module = "dev.gitlive:firebase-crashlytics", version.ref = "firebaseGitlive"}
 firebase-functions = { module = "dev.gitlive:firebase-functions", version.ref = "firebaseGitlive"}
 firebase-mlkit-android = { module = "com.google.firebase:firebase-ml-vision", version.ref = "firebase" }
+firebase-config = { module = "dev.gitlive:firebase-config", version.ref = "firebaseGitlive"}
 
 kmpauth-google = { module = "io.github.mirzemehdi:kmpauth-google", version.ref = "kmpAuth" }
 kmpauth-firebase = { module = "io.github.mirzemehdi:kmpauth-firebase", version.ref = "kmpAuth" }
