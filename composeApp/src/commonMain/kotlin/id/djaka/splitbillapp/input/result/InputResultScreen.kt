@@ -52,6 +52,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastFirst
@@ -356,7 +357,7 @@ private fun MemberSectionItem(
                         exit = slideOutHorizontally { it * 2 }
                     ) {
                         Row(
-                            Modifier.scale(1.8f).alpha(0.2f).offset(x = -18.dp),
+                            Modifier.scale(2.2f).alpha(0.2f).offset(x = -18.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             // I dont know why but without this spacing, it will clip
@@ -369,7 +370,9 @@ private fun MemberSectionItem(
                             Text(
                                 "PAID",
                                 fontWeight = FontWeight.Black,
-                                fontSize = 36.sp,
+                                fontSize = 24.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Visible
                             )
                         }
                     }
