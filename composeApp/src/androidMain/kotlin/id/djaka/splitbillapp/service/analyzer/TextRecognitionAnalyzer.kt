@@ -41,13 +41,14 @@ class TextRecognitionAnalyzer(
     }
 
     @OptIn(ExperimentalGetImage::class)
-    fun startAnalyze(onFinished: (String) -> Unit) {
+    fun startAnalyze(onFinished: (String) -> Unit, onFailed: (e: Exception) -> Unit) {
         textRecognizer.processImage(iamge ?: return)
             .addOnSuccessListener { firebaseVisionText ->
                 onTextDetected(firebaseVisionText.text)
                 onFinished(firebaseVisionText.text)
             }
             .addOnFailureListener { e ->
+                onFailed(e)
             }
     }
 

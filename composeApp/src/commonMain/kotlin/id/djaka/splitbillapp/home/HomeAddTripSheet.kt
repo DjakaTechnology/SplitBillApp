@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import id.djaka.splitbillapp.platform.Spacing
 import id.djaka.splitbillapp.util.readableDateYearFormat
 import id.djaka.splitbillapp.widget.DatePickerPopUpWidget
@@ -29,6 +30,32 @@ class HomeAddTripSheetState {
 
     var isSelectingStartDate by mutableStateOf(false)
     var isSelectingEndDate by mutableStateOf(false)
+    
+    // Error states
+    var nameError by mutableStateOf<String?>(null)
+    var endDateError by mutableStateOf<String?>(null)
+    
+    fun validate(): Boolean {
+        var isValid = true
+        
+        // Validate name
+        if (name.trim().isEmpty()) {
+            nameError = "Name cannot be empty"
+            isValid = false
+        } else {
+            nameError = null
+        }
+        
+        // Validate end date
+        if (endDate <= startDate) {
+            endDateError = "End date must be after start date"
+            isValid = false
+        } else {
+            endDateError = null
+        }
+        
+        return isValid
+    }
 }
 
 @Composable
@@ -57,13 +84,25 @@ fun HomeAddTripSheet(
     if (state.isSelectingStartDate) {
         DatePickerPopUpWidget(
             date = state.startDate,
-            onDateChange = { state.startDate = it },
+            onDateChange = { 
+                state.startDate = it
+                // Clear end date error when start date changes
+                if (state.endDateError != null) {
+                    state.validate()
+                }
+            },
             onDismissRequest = { state.isSelectingStartDate = false }
         )
     } else if (state.isSelectingEndDate) {
         DatePickerPopUpWidget(
             date = state.endDate,
-            onDateChange = { state.endDate = it },
+            onDateChange = { 
+                state.endDate = it
+                // Clear end date error when end date changes
+                if (state.endDateError != null) {
+                    state.validate()
+                }
+            },
             onDismissRequest = { state.isSelectingEndDate = false }
         )
     }
@@ -71,9 +110,17 @@ fun HomeAddTripSheet(
     Column(modifier, verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
         OutlinedTextField(
             value = state.name,
-            onValueChange = { state.name = it },
+            onValueChange = { 
+                state.name = it
+                // Clear name error when user starts typing
+                if (state.nameError != null) {
+                    state.validate()
+                }
+            },
             label = { Text("Name") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            isError = state.nameError != null,
+            supportingText = state.nameError?.let { { Text(it, color = Color.Red) } }
         )
         OutlinedTextField(
             value = Instant.fromEpochMilliseconds(state.startDate).format(readableDateYearFormat),
@@ -97,6 +144,8 @@ fun HomeAddTripSheet(
             label = { Text("End Date") },
             modifier = Modifier.fillMaxWidth(),
             readOnly = true,
+            isError = state.endDateError != null,
+            supportingText = state.endDateError?.let { { Text(it, color = Color.Red) } },
             trailingIcon = {
                 IconButton(onClick = { state.isSelectingEndDate = !state.isSelectingEndDate }) {
                     Icon(
@@ -107,7 +156,14 @@ fun HomeAddTripSheet(
             }
         )
 
-        Button(onClick = onClickSave, modifier = Modifier.fillMaxWidth()) {
+        Button(
+            onClick = { 
+                if (state.validate()) {
+                    onClickSave()
+                }
+            }, 
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Text("Save")
         }
     }

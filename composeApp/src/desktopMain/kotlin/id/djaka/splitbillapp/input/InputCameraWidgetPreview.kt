@@ -9,6 +9,6 @@ import id.djaka.splitbillapp.platform.CoreTheme
 @Preview
 private fun InputCameraWidgetPreview() {
     CoreTheme {
-        InputCameraWidget()
+        InputCameraWidget(snackbarHostState)
     }
 }

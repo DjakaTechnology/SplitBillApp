@@ -15,6 +15,7 @@ import id.djaka.splitbillapp.platform.Spacing
 
 @Composable
 fun LoadingDialog(
+    text: String = "Loading...",
     onDismissRequest: () -> Unit = {}
 ) {
     Dialog(onDismissRequest = onDismissRequest) {
@@ -25,7 +26,7 @@ fun LoadingDialog(
                 modifier = Modifier.fillMaxWidth().padding(Spacing.m)
             ) {
                 CircularProgressIndicator()
-                Text("Loading...")
+                Text(text)
             }
         }
     }

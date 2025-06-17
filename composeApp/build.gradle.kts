@@ -111,6 +111,9 @@ kotlin {
             implementation(libs.kmpauth.google)
             implementation(libs.kmpauth.firebase)
             implementation(libs.kmpauth.uihelper)
+
+            implementation(libs.kotlin.result)
+            implementation(libs.kotlin.result.coroutines)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

@@ -33,6 +33,7 @@ cameraLifecycle = "1.3.4"
 cameraView = "1.3.4"
 guava = "32.1.3-android"
 mlkitText = "19.0.1"
+kotlin-result = "2.0.1"
 
 [libraries]
 desugar_jdk_libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar_jdk_libs" }
@@ -88,6 +89,9 @@ androidx-camera-view = { group = "androidx.camera", name = "camera-view", versio
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 
 play-service-mlkit-text = { module = "com.google.android.gms:play-services-mlkit-text-recognition", version.ref = "mlkitText" }
+
+kotlin-result = { module = "com.michael-bull.kotlin-result:kotlin-result", version.ref = "kotlin-result" }
+kotlin-result-coroutines = { module = "com.michael-bull.kotlin-result:kotlin-result-coroutines", version.ref = "kotlin-result" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

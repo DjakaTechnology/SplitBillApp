@@ -357,7 +357,7 @@ private fun MemberSectionItem(
                         exit = slideOutHorizontally { it * 2 }
                     ) {
                         Row(
-                            Modifier.scale(2.2f).alpha(0.2f).offset(x = -18.dp),
+                            Modifier.width(128.dp).scale(2.4f).alpha(0.2f).offset(x = -18.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             // I dont know why but without this spacing, it will clip

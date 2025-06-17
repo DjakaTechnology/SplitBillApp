@@ -36,16 +36,24 @@ fun PeopleWidget(
     isShowLabel: Boolean = true,
     size: Dp = 64.dp,
     activeBorderColor: Color = MaterialTheme.colorScheme.primary,
-    backgroundAlpha: Float = 0.5f
+    backgroundAlpha: Float? = null
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.widthIn(max = size)) {
+    val color = createRandomColorFromName(text).let {
+        if (backgroundAlpha != null) {
+            it.copy(alpha = backgroundAlpha)
+        } else it
+    }
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.widthIn(max = size)
+    ) {
         Box {
             Box(
                 Modifier.size(size)
                     .clip(CircleShape)
-                    .background(color = createRandomColorFromName(text))
+                    .background(color = color)
                     .border(
-                        if (isSelected) 2.dp else 0.dp,
+                        if (isSelected) 8.dp else 0.dp,
                         if (isSelected) activeBorderColor else MaterialTheme.colorScheme.surface,
                         CircleShape
                     )

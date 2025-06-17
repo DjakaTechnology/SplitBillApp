@@ -1,5 +1,6 @@
 package id.djaka.splitbillapp.input.camera
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -19,13 +20,12 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Image
-import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -39,7 +39,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -51,6 +50,7 @@ import id.djaka.splitbillapp.platform.CoreTheme
 import id.djaka.splitbillapp.platform.Spacing
 import id.djaka.splitbillapp.widget.LoadingDialog
 import kotlinx.coroutines.launch
+import java.net.UnknownHostException
 
 class InputCameraScreen : Screen {
     @Composable
@@ -58,6 +58,7 @@ class InputCameraScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = getScreenModel<InputCameraScreenModel>()
         val coroutineScope = rememberCoroutineScope()
+        val snackbarHostState = remember { SnackbarHostState() }
         LaunchedEffect(screenModel) {
             screenModel.onCreate()
             if (!Firebase.remoteConfig.getValue("cloudVision").asBoolean()) {
@@ -70,10 +71,11 @@ class InputCameraScreen : Screen {
         CoreTheme {
             var isLoading by remember { mutableStateOf(false) }
             if (isLoading) {
-                LoadingDialog { isLoading = false }
+                LoadingDialog("Processing image, please wait...")
             }
 
             InputCameraWidget(
+                snackbarHostState,
                 onOpenManual = {
                     navigator.push(
                         InputItemsScreen(screenModel.id)
@@ -86,10 +88,24 @@ class InputCameraScreen : Screen {
                     coroutineScope.launch {
                         isLoading = true
                         try {
-                            screenModel.onProcessCameraText(it, navigator)
+                            val result = screenModel.onProcessCameraText(it, navigator)
+                            isLoading = false
+                            if (result.isErr) snackbarHostState.showSnackbar(result.error)
                         } catch (e: Exception) {
                             e.printStackTrace()
+                            isLoading = false
+                            snackbarHostState.showSnackbar("Something went wrong, please try again later")
                         }
+                    }
+                },
+                onFailedScan = {
+                    coroutineScope.launch {
+                        if (it.message == "Cloud Vision batchAnnotateImages call failure") {
+                            snackbarHostState.showSnackbar("Internet unavailable, please check your internet connection")
+                        } else {
+                            snackbarHostState.showSnackbar("Something went wrong, please try again later")
+                        }
+                        it.printStackTrace()
                         isLoading = false
                     }
                 }
@@ -101,11 +117,14 @@ class InputCameraScreen : Screen {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InputCameraWidget(
+    snackbarHostState: SnackbarHostState,
     onOpenManual: () -> Unit = {},
     onClickBack: () -> Unit = {},
     onScan: (String) -> Unit = {},
+    onFailedScan: (e: Exception) -> Unit = {}
 ) {
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -125,12 +144,16 @@ fun InputCameraWidget(
     ) {
         var isLoading by remember { mutableStateOf(false) }
         if (isLoading) {
-            LoadingDialog()
+            LoadingDialog("Processing image, please wait...")
         }
         val recognitionState = rememberTextRecognitionState(
             onFinishScan = {
                 onScan(it)
                 isLoading = false
+            },
+            onFailedScan = {
+                isLoading = false
+                onFailedScan(it)
             }
         )
         Column(Modifier.fillMaxSize().padding(it)) {

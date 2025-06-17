@@ -92,7 +92,7 @@ fun SplitBillItem(
                         people.take(10).fastForEach {
                             PeopleWidget(
                                 size = 16.dp,
-                                isSelected = true,
+                                isSelected = false,
                                 text = it,
                                 isShowLabel = false,
                                 backgroundAlpha = 1f

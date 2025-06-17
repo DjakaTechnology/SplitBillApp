@@ -245,7 +245,8 @@ private fun MemberSection(
                         onClickItem(index)
                     },
                     isShowClose = true,
-                    text = item.name
+                    text = item.name,
+                    backgroundAlpha = if (selectedMember != null && item.id != selectedMember) 0.75f else 1f
                 )
             }
         }

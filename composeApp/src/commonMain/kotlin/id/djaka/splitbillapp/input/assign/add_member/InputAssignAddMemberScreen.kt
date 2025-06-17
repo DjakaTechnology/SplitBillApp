@@ -56,7 +56,7 @@ fun AddMemberSheet(
                 value = state.member,
                 onValueChange = { state.member = it },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Write Name") }
+                label = { Text("Search or Add New Member") }
             )
         }
 

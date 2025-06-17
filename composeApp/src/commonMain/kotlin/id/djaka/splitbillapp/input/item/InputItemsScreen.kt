@@ -38,6 +38,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
@@ -72,11 +73,14 @@ data class InputItemsScreen(
         CoreTheme {
             InputItemsWidget(
                 onClickNext = {
-                    navigator.push(
-                        InputAssignItemScreen(id)
-                    )
+                    if (screenModel.validateItems()) {
+                        navigator.push(
+                            InputAssignItemScreen(id)
+                        )
+                    }
                 },
                 total = screenModel.total.collectAsState(0.0).value,
+                validationErrors = screenModel.validationErrors.value,
                 onClickAddItem = {
                     screenModel.addMenuItem()
                 },
@@ -92,6 +96,7 @@ data class InputItemsScreen(
                     screenModel.feeItem.removeAt(index)
                 },
                 onMenuItemChange = { index, name, price, qty, total ->
+                    screenModel.clearValidationErrors()
                     screenModel.onHandleMenuItemChange(index, name, price, qty, total)
                 },
                 onDeleteMenuItem = { index ->
@@ -109,6 +114,7 @@ data class InputItemsScreen(
 @Composable
 fun InputItemsWidget(
     total: Double = 100_000.0,
+    validationErrors: List<ValidationError> = emptyList(),
     itemList: List<InputItemScreenModel.MenuItem>,
     feeList: List<InputItemScreenModel.FeeItem>,
     onClickNext: () -> Unit = {},
@@ -142,7 +148,19 @@ fun InputItemsWidget(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
                     itemList.fastForEachIndexed { index, it ->
-                        Card {
+                        val errorItem = remember(index, validationErrors) {
+                            validationErrors.firstOrNull { error ->
+                                when (error) {
+                                    is ValidationError.ItemMissingPrice -> error.index == index
+                                    is ValidationError.ItemMissingName -> error.index == index
+                                }
+                            }
+                        }
+                        Card(
+                            colors = androidx.compose.material3.CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            )
+                        ) {
                             Item(
                                 it.name,
                                 it.qty,
@@ -154,6 +172,7 @@ fun InputItemsWidget(
                                 totalHint = it.totalAutoFill.takeIf { it != 0.0 }
                                     ?.toReadableCurrency()
                                     ?: "",
+                                validationErrors = errorItem,
                                 onDelete = { onDeleteMenuItem(index) },
                                 onNameChange = { name ->
                                     onMenuItemChange(
@@ -224,7 +243,7 @@ fun InputItemsWidget(
                     }
                     TextButton(onClick = onClickAddFee, modifier = Modifier.align(Alignment.End)) {
                         Icon(Icons.Filled.Add, "add")
-                        Text("Add Fee")
+                        Text("Add Fee/Discount")
                     }
                 }
             }
@@ -322,12 +341,14 @@ private fun Item(
     price: String,
     priceHint: String = "",
     totalHint: String = "",
+    validationErrors: ValidationError? = null,
     onDelete: () -> Unit = {},
     onNameChange: (String) -> Unit = {},
     onQtyChange: (String) -> Unit = {},
     onTotalChange: (String) -> Unit = {},
     onPriceChange: (String) -> Unit = {}
 ) {
+    val isError =
     Column(
         Modifier.fillMaxWidth().padding(Spacing.m),
         verticalArrangement = Arrangement.spacedBy(Spacing.xs)
@@ -337,15 +358,27 @@ private fun Item(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            LabelTextField(
-                value = name,
-                label = { Text("Name") },
-                onValueChange = onNameChange,
-                textStyle = LocalTextStyle.current.copy(
-                    fontWeight = FontWeight.Bold
-                ),
-                modifier = Modifier.weight(0.9f)
-            )
+            Column(modifier = Modifier.weight(0.9f)) {
+                LabelTextField(
+                    value = name,
+                    label = { Text("Name") },
+                    onValueChange = onNameChange,
+                    textStyle = LocalTextStyle.current.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = validationErrors is ValidationError.ItemMissingName
+                )
+                // Show name validation error
+                if (validationErrors is ValidationError.ItemMissingName) {
+                    Text(
+                        "Name is required",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+            }
 
             Box(modifier = Modifier.clickable { onDelete() }) {
                 Icon(Icons.Filled.Close, "delete", modifier = Modifier.size(24.dp))
@@ -357,21 +390,33 @@ private fun Item(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
-            LabelTextField(
-                value = price,
-                label = {
-                    if (price.isEmpty() && priceHint.isNotEmpty()) Text(priceHint) else Text(
-                        "Price"
+            Column(modifier = Modifier.weight(1f)) {
+                LabelTextField(
+                    value = price,
+                    label = {
+                        if (price.isEmpty() && priceHint.isNotEmpty()) Text(priceHint) else Text(
+                            "Price"
+                        )
+                    },
+                    onValueChange = onPriceChange,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Next
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                    visualTransformation = DecimalInputVisualTransformation(),
+                    isError = validationErrors is ValidationError.ItemMissingPrice
+                )
+                // Show price validation error
+                if (validationErrors is ValidationError.ItemMissingPrice) {
+                    Text(
+                        "Price is required",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(top = 4.dp)
                     )
-                },
-                onValueChange = onPriceChange,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number,
-                    imeAction = ImeAction.Next
-                ),
-                modifier = Modifier.weight(1f),
-                visualTransformation = DecimalInputVisualTransformation()
-            )
+                }
+            }
 
             LabelTextField(
                 value = qty,
@@ -412,8 +457,6 @@ private fun Item(
             )
         }
     }
-
-
 }
 
 @Composable
@@ -425,7 +468,8 @@ fun LabelTextField(
     modifier: Modifier = Modifier,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
-    textStyle: TextStyle = LocalTextStyle.current
+    textStyle: TextStyle = LocalTextStyle.current,
+    isError: Boolean = false
 ) {
     BasicTextField(
         value = value,
@@ -433,7 +477,7 @@ fun LabelTextField(
         modifier = modifier,
         keyboardOptions = keyboardOptions,
         textStyle = textStyle.copy(
-            color = MaterialTheme.colorScheme.onSurface,
+            color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
         ),
         visualTransformation = visualTransformation,
         decorationBox = { innerTextField ->
@@ -441,7 +485,7 @@ fun LabelTextField(
                 if (value.isEmpty()) {
                     ProvideTextStyle(
                         textStyle.copy(
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            color = if (isError) MaterialTheme.colorScheme.error.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                         )
                     ) {
                         label()
@@ -454,12 +498,12 @@ fun LabelTextField(
                         Box(
                             Modifier.fillMaxWidth()
                                 .height(1.dp)
-                                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f))
+                                .background(if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f))
                         )
                     }
                 }
             }
         },
-        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
+        cursorBrush = SolidColor(if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
     )
 }

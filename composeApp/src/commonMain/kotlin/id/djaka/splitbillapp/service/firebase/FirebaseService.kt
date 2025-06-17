@@ -9,6 +9,7 @@ class FirebaseService {
         flow {
             val userFlow = Firebase.auth.currentUser
             emit(userFlow)
+
             Firebase.auth.authStateChanged.collect {
                 if (userFlow != it) {
                     emit(userFlow)

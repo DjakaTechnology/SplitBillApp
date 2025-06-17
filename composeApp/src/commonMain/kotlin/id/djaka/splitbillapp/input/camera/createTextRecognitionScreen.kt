@@ -6,12 +6,14 @@ import androidx.compose.runtime.remember
 class TextRecognitionState {
     var onStartScan: () -> Unit = {}
     var onFinishedScan: (String) -> Unit = {}
+    var onFailedScan: (e: Exception) -> Unit = {}
 }
 
 @Composable
-fun rememberTextRecognitionState(onFinishScan: (String) -> Unit = {}): TextRecognitionState {
+fun rememberTextRecognitionState(onFinishScan: (String) -> Unit = {}, onFailedScan: (e: Exception) -> Unit = {}): TextRecognitionState {
     return remember { TextRecognitionState().apply {
         onFinishedScan = onFinishScan
+        this.onFailedScan = onFailedScan
     } }
 }
 

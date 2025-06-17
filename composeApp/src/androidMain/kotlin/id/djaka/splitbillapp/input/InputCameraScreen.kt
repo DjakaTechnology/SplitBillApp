@@ -39,9 +39,14 @@ fun TextRecognitionScreen(state: TextRecognitionState) {
     val analyzer = remember { TextRecognitionAnalyzer { extractedText = it } }
     LaunchedEffect(state) {
         state.onStartScan = {
-            analyzer.startAnalyze {
-                state.onFinishedScan(it)
-            }
+            analyzer.startAnalyze(
+                onFinished = {
+                    state.onFinishedScan(it)
+                },
+                onFailed = {
+                    state.onFailedScan(it)
+                }
+            )
         }
     }
     Box {

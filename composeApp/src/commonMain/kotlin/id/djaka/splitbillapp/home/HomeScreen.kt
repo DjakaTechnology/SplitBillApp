@@ -5,8 +5,10 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -160,7 +162,7 @@ fun HomeWidget(
         }
 
         Column(
-            Modifier.fillMaxWidth().padding(it).padding(horizontal = Spacing.m)
+            Modifier.fillMaxWidth().padding(it)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(Spacing.m)
         ) {
@@ -179,7 +181,10 @@ private fun BillSection(
     onClickAddBill: () -> Unit,
     tripMap: Map<String, TripModel>
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+        modifier = Modifier.padding(horizontal = Spacing.m)
+    ) {
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
@@ -212,7 +217,7 @@ private fun TripSection(
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.m)
         ) {
             Text(
                 "Trips",
@@ -229,11 +234,12 @@ private fun TripSection(
             horizontalArrangement = Arrangement.spacedBy(Spacing.s),
             modifier = Modifier.horizontalScroll(
                 rememberScrollState()
-            )
+            ).padding(horizontal = Spacing.m)
         ) {
             tripData.fastForEach {
                 TripCard(it, onClick = { onClickTrip(it) })
             }
+            Spacer(Modifier.width(Spacing.m))
         }
     }
 }
